@@ -2171,6 +2171,11 @@ public class SqlFunctions {
     return (b0 == null || b1 == null) ? castNonNull(null) : b0.add(b1);
   }
 
+  /** SQL <code>+</code> operator applied to String values. Same as string concat operator. */
+  public static String plus(String s0, String s1) {
+    return s0 + s1;
+  }
+
   /** SQL <code>+</code> operator applied to Object values (at least one operand
    * has ANY type; either may be null). */
   public static @PolyNull Object plusAny(@PolyNull Object b0,
