@@ -5454,7 +5454,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase {
   @Test void testInvalidGroupBy2() {
     sql("select count(*) from emp group by ^deptno + 'a'^")
         .withTypeCoercion(false)
-        .fails("(?s)Cannot apply '\\+' to arguments of type.*");
+        .fails("(?s)Cannot apply '\\|\\|' to arguments of type.*");
     sql("select count(*) from emp group by deptno + 'a'").ok();
   }
 
@@ -5463,7 +5463,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase {
         + "from emp\n"
         + "group by rollup(deptno / 2, sal), rollup(empno, ^deptno + 'a'^)")
         .withTypeCoercion(false)
-        .fails("(?s)Cannot apply '\\+' to arguments of type.*");
+        .fails("(?s)Cannot apply '\\|\\|' to arguments of type.*");
     sql("select deptno / 2 + 1, count(*) as c\n"
         + "from emp\n"
         + "group by rollup(deptno / 2, sal), rollup(empno, ^deptno + 'a'^)").ok();
