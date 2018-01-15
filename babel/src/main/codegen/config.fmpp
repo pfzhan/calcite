@@ -131,7 +131,7 @@ data: {
       "CONTAINS"
       "CONTINUE"
       "CONVERT"
-      "CORR"
+#     "CORR"
       "CORRESPONDING"
       "COUNT"
       "COVAR_POP"
