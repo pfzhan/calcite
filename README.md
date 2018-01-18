@@ -22,6 +22,25 @@ limitations under the License.
 [![CI Status](https://github.com/apache/calcite/workflows/CI/badge.svg?branch=master)](https://github.com/apache/calcite/actions?query=branch%3Amaster)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/apache/calcite?svg=true&branch=master)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/calcite)
 
+# Abount KyCalcite
+
+KyCalcite is a customized calcite for better kylin use. 
+
+Naming convension of different branch is kylin-{CALCITE_VERSION}.x, e.g. kylin-1.13.0.x
+
+Naming convension of different releases (the name could be used for creating git tag, or pom version name), is {CALCITE_VERSION}-kylin-r{RELEASE_NUMBER}, e.g. 1.13.0-kylin-r1
+
+For new KyCalcite releases we need to deploy it to our own Nexus server (kynexus.chinaeast.cloudapp.chinacloudapi.cn:8081), if you don't have enough permission please contact hongbin.ma@kyligence.io
+
+**Since sonar does not allow overriding formal releases, you might choose to use a snapshot version name, e.g. 1.13.0-kylin-r1-SNAPSHOT
+
+steps:
+
+1. publish the new kycalcite to nexus server
+2. change kap and kylin's calcite pom dependency version
+3. create a tag for the commit on which the new kycalcite is built from
+
+
 # Apache Calcite
 
 Apache Calcite is a dynamic data management framework.
