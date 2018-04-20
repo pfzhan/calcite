@@ -18,6 +18,7 @@ package org.apache.calcite.runtime;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.lang.reflect.Field;
 import java.text.Collator;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -59,6 +60,33 @@ public class Utilities {
   @Deprecated // to be removed before 2.0
   public static int hashCode(double v) {
     return Double.hashCode(v);
+  }
+
+  public static <T> Object newInstance(Class<T> clazz, Object... values) {
+    T instance;
+    try {
+      instance = clazz.newInstance();
+    } catch (InstantiationException e) {
+      throw new RuntimeException(e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+
+    if (values.length != clazz.getFields().length) {
+      throw new RuntimeException("values length not equal to fields number\n"
+          + "values: " + values + "\nfields: " + clazz.getFields() + "\n");
+    }
+
+    int i = 0;
+    for (Field field: clazz.getFields()) {
+      try {
+        field.set(instance, values[i++]);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return instance;
   }
 
   /** Computes the hash code of a {@code float} value. Equivalent to
