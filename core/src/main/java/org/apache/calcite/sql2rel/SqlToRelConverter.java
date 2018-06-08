@@ -210,6 +210,17 @@ import static org.apache.calcite.sql.SqlUtil.stripAs;
 
 import static java.util.Objects.requireNonNull;
 
+/*
+ * The code has synced with calcite. Hope one day, we could remove the hardcode override point.
+ * OVERRIDE POINT:
+ * - DEFAULT_IN_SUB_QUERY_THRESHOLD, was `20`, now `Integer.MAX_VALUE`
+ * - isTrimUnusedFields(), override to false
+ * - AggConverter.translateAgg(...), skip column reading
+ * for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
+ * - convertQuery(), call hackSelectStar() at the end
+ * - createJoin() check cast operation
+ */
+
 /**
  * Converts a SQL parse tree (consisting of
  * {@link org.apache.calcite.sql.SqlNode} objects) into a relational algebra
@@ -236,7 +247,8 @@ public class SqlToRelConverter {
 
   /** Size of the smallest IN list that will be converted to a semijoin to a
    * static table. */
-  public static final int DEFAULT_IN_SUB_QUERY_THRESHOLD = 20;
+  /* OVERRIDE POINT */
+  public static final int DEFAULT_IN_SUB_QUERY_THRESHOLD = Integer.MAX_VALUE;
 
   @Deprecated // to be removed before 2.0
   public static final int DEFAULT_IN_SUBQUERY_THRESHOLD =
@@ -582,6 +594,9 @@ public class SqlToRelConverter {
       SqlNode query,
       final boolean needsValidation,
       final boolean top) {
+
+    SqlNode origQuery = query; /* OVERRIDE POINT */
+
     if (needsValidation) {
       query = validator().validate(query);
     }
@@ -617,9 +632,105 @@ public class SqlToRelConverter {
     }
     // propagate the hints.
     result = RelOptUtil.propagateRelHints(result, false);
-    return RelRoot.of(result, validatedRowType, query.getKind())
+    RelRoot origResult = RelRoot.of(result, validatedRowType, query.getKind())
         .withCollation(collation)
         .withHints(hints);
+    return hackSelectStar(origQuery, origResult);
+  }
+
+  /* OVERRIDE POINT */
+  private RelRoot hackSelectStar(SqlNode query, RelRoot root) {
+    //        /*
+    //         * Rel tree is like:
+    //         *
+    //         *   LogicalSort (optional)
+    //         *    |- LogicalProject
+    //         *        |- LogicalFilter (optional)
+    //         *            |- OLAPTableScan or LogicalJoin
+    //         */
+    LogicalProject rootPrj = null;
+    LogicalSort rootSort = null;
+    if (root.rel instanceof LogicalProject) {
+      rootPrj = (LogicalProject) root.rel;
+    } else if (root.rel instanceof LogicalSort && root.rel.getInput(0) instanceof LogicalProject) {
+      rootPrj = (LogicalProject) root.rel.getInput(0);
+      rootSort = (LogicalSort) root.rel;
+    } else {
+      return root;
+    }
+
+    //
+    RelNode input = rootPrj.getInput();
+    //        if (!(//
+    //                isAmong(input, "OLAPTableScan", "LogicalJoin")//
+    //                || (isAmong(input, "LogicalFilter")
+    //                && isAmong(input.getInput(0), "OLAPTableScan", "LogicalJoin"))//
+    //             ))
+    //            return root;
+    //
+    //        if (rootPrj.getRowType().getFieldCount() < input.getRowType().getFieldCount())
+    //            return root;
+
+    RelDataType inType = rootPrj.getRowType();
+    List<String> inFields = inType.getFieldNames();
+    List<RexNode> projExp = new ArrayList<>();
+    List<Pair<Integer, String>> projFields = new ArrayList<>();
+    Map<Integer, Integer> projFieldMapping = new HashMap<>();
+    RelDataTypeFactory.Builder projTypeBuilder = getCluster().getTypeFactory().builder();
+    RelDataTypeFactory.Builder validTypeBuilder = getCluster().getTypeFactory().builder();
+
+    boolean hiddenColumnExists = false;
+    for (int i = 0; i < root.validatedRowType.getFieldList().size(); i++) {
+      if (root.validatedRowType.getFieldNames().get(i).startsWith("_KY_")) {
+        hiddenColumnExists = true;
+      }
+    }
+    if (!hiddenColumnExists) {
+      return root;
+    }
+
+    for (int i = 0; i < inFields.size(); i++) {
+      if (!inFields.get(i).startsWith("_KY_")) {
+        projExp.add(rootPrj.getProjects().get(i));
+        projFieldMapping.put(i, projFields.size());
+        projFields.add(Pair.of(projFields.size(), inFields.get(i)));
+        projTypeBuilder.add(inType.getFieldList().get(i));
+
+        if (i < root.validatedRowType.getFieldList().size()) {
+          //for cases like kylin-it/src/test/resources/query/sql_verifyCount/query10.sql
+          validTypeBuilder.add(root.validatedRowType.getFieldList().get(i));
+        }
+      }
+    }
+
+    RelDataType projRowType = projTypeBuilder.build();
+    rootPrj = LogicalProject.create(input, ImmutableList.of(), projExp, projRowType);
+    if (rootSort != null) {
+      //for cases like kylin-it/src/test/resources/query/sql_verifyCount/query10.sql,
+      // original RelCollation is stale, need to fix its fieldIndex
+      RelCollation originalCollation = rootSort.collation;
+      RelCollation newCollation = null;
+      List<RelFieldCollation> fieldCollations = originalCollation.getFieldCollations();
+      ImmutableList.Builder<RelFieldCollation> newFieldCollations = ImmutableList.builder();
+      for (RelFieldCollation fieldCollation : fieldCollations) {
+        if (projFieldMapping.containsKey(fieldCollation.getFieldIndex())) {
+          newFieldCollations.add(
+                  fieldCollation.withFieldIndex(projFieldMapping.get(fieldCollation.getFieldIndex())));
+        } else {
+          newFieldCollations.add(fieldCollation);
+        }
+      }
+      newCollation = RelCollations.of(newFieldCollations.build());
+      rootSort = LogicalSort.create(rootPrj, newCollation, rootSort.offset, rootSort.fetch);
+    }
+
+    RelDataType validRowType = validTypeBuilder.build();
+    root = new RelRoot(rootSort == null ? rootPrj : rootSort, validRowType, root.kind, projFields,
+            rootSort == null ? root.collation : rootSort.getCollation(), ImmutableList.of());
+
+    validator.setValidatedNodeType(query, validRowType);
+
+    return root;
   }
 
   private static boolean isStream(SqlNode query) {
@@ -2801,6 +2912,11 @@ public class SqlToRelConverter {
           p.id, requiredCols, joinType);
     }
 
+    // OVERRIDE POINT
+    if (containOnlyCast(joinCond)) {
+      joinCond = convertCastCondition(joinCond);
+    }
+
     final RelNode node =
         relBuilder.push(leftRel)
             .push(rightRel)
@@ -2818,6 +2934,56 @@ public class SqlToRelConverter {
       }
     }
     return node;
+  }
+
+  // OVERRIDE POINT
+  private boolean containOnlyCast(RexNode node) {
+    boolean result = true;
+    switch (node.getKind()) {
+    case AND:
+    case EQUALS:
+      final RexCall call = (RexCall) node;
+      for (RexNode operand : call.getOperands()) {
+        result &= containOnlyCast(operand);
+      }
+      break;
+    case OR:
+    case INPUT_REF:
+    case LITERAL:
+    case CAST:
+      return true;
+    default:
+      return false;
+    }
+    return result;
+  }
+
+  // OVERRIDE POINT
+  private static RexNode convertCastCondition(RexNode node) {
+    switch (node.getKind()) {
+    case IS_NULL:
+    case IS_NOT_NULL:
+    case OR:
+    case AND:
+    case EQUALS:
+      RexCall call = (RexCall) node;
+      List<RexNode> list = new ArrayList();
+      for (RexNode operand : call.getOperands()) {
+        final RexNode e =
+                convertCastCondition(
+                        operand);
+        list.add(e);
+      }
+      if (!list.equals(call.getOperands())) {
+        return call.clone(call.getType(), list);
+      }
+      return call;
+    case CAST:
+      call = (RexCall) node;
+      return  call.getOperands().get(0);
+    default:
+      return node;
+    }
   }
 
   private @Nullable CorrelationUse getCorrelationUse(Blackboard bb, final RelNode r0) {
@@ -3569,7 +3735,9 @@ public class SqlToRelConverter {
    */
   @Deprecated // to be removed before 2.0
   public boolean isTrimUnusedFields() {
-    return config.isTrimUnusedFields();
+//    return config.isTrimUnusedFields();
+    /* OVERRIDE POINT */
+    return false;
   }
 
   /**
@@ -5786,7 +5954,7 @@ public class SqlToRelConverter {
           // special case for COUNT(*):  delete the *
           if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
-            if (id.isStar()) {
+            if (id.isStar() || isSimpleCount(call)) { /* OVERRIDE POINT */
               assert call.operandCount() == 1;
               assert args.isEmpty();
               break;
@@ -5877,6 +6045,17 @@ public class SqlToRelConverter {
               aggCallMapping,
               i -> convertedInputExprs.get(i).left.getType().isNullable());
       aggMapping.put(outerCall, rex);
+    }
+
+    /* OVERRIDE POINT */
+    private boolean isSimpleCount(SqlCall call) {
+      if (call.getOperator().isName("COUNT", false) && call.operandCount() == 1) {
+        final SqlNode parm = call.operand(0);
+        if (parm instanceof SqlNumericLiteral && call.getFunctionQuantifier() == null) {
+          return true;
+        }
+      }
+      return false;
     }
 
     private RelFieldCollation sortToFieldCollation(SqlNode expr,

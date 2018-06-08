@@ -84,6 +84,18 @@ import static org.apache.calcite.util.Static.RESOURCE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
+/*
+ * OVERRIDE POINT:
+ * - more power() overloads
+ * - refined org.apache.calcite.runtime.SqlFunctions#addMonths(int, int)
+ * - corner case subString()
+ * - corner case trim_()
+ * - upper()
+ * - lower()
+ * - charLength()
+ * - addMonths()
+ */
+
 /**
  * Helper methods to implement SQL functions in generated code.
  *
@@ -95,6 +107,7 @@ import static java.util.Objects.requireNonNull;
  * If null arguments are possible, the code-generation framework checks for
  * nulls before calling the functions.</p>
  */
+
 @SuppressWarnings("UnnecessaryUnboxing")
 @Deterministic
 public class SqlFunctions {
@@ -321,12 +334,20 @@ public class SqlFunctions {
   }
 
   /** SQL UPPER(string) function. */
+  //overrivde
   public static String upper(String s) {
+    if (s == null) {
+      return "";
+    }
     return s.toUpperCase(Locale.ROOT);
   }
 
   /** SQL LOWER(string) function. */
+  //override
   public static String lower(String s) {
+    if (s == null) {
+      return "";
+    }
     return s.toLowerCase(Locale.ROOT);
   }
 
@@ -474,6 +495,9 @@ public class SqlFunctions {
 
   /** SQL CHARACTER_LENGTH(string) function. */
   public static int charLength(String s) {
+    if (s == null) {
+      return 0;
+    }
     return s.length();
   }
 
@@ -512,6 +536,9 @@ public class SqlFunctions {
       String s, boolean strict) {
     if (strict && seek.length() != 1) {
       throw RESOURCE.trimError().ex();
+    }
+    if (s == null) {
+      return null;
     }
     int j = s.length();
     if (right) {
@@ -1247,6 +1274,53 @@ public class SqlFunctions {
   public static double power(BigDecimal b0, BigDecimal b1) {
     return Math.pow(b0.doubleValue(), b1.doubleValue());
   }
+
+  public static double power(long b0, BigDecimal b1) {
+    return Math.pow(b0, b1.doubleValue());
+  }
+
+  // OVERRIDE POINT starts, more power overloads
+  public static double power(double n1, long n2) {
+    return Math.pow(n1, (double) n2);
+  }
+
+  public static double power(long n1, double n2) {
+    return Math.pow((double) n1, n2);
+  }
+
+  public static double power(BigDecimal n1, long n2) {
+    return Math.pow(n1.doubleValue(), (double) n2);
+  }
+
+  public static double power(double n1, int n2) {
+    return Math.pow(n1, (double) n2);
+  }
+
+  public static double power(long n1, int n2) {
+    return Math.pow((double) n1, (double) n2);
+  }
+
+  public static double power(BigDecimal n1, int n2) {
+    return Math.pow(n1.doubleValue(), (double) n2);
+  }
+
+  public static double power(int n1, double n2) {
+    return Math.pow((double) n1, n2);
+  }
+
+  public static double power(int n1, long n2) {
+    return Math.pow((double) n1, (double) n2);
+  }
+
+  public static double power(int n1, BigDecimal n2) {
+    return Math.pow((double) n1, n2.doubleValue());
+  }
+
+  public static double power(int n1, int n2) {
+    return Math.pow(n1, n2);
+  }
+
+  // OVERRIDE POINT ends, more power overloads
 
   // LN
 
