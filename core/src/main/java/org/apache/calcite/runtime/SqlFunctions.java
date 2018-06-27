@@ -333,6 +333,36 @@ public class SqlFunctions {
     return c.substring(s0, e0);
   }
 
+  public static String substring(String s, long from, long for_) {
+    if (from < Integer.MIN_VALUE || from > Integer.MAX_VALUE || for_ < Integer.MIN_VALUE
+        || for_ > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("Cannot be cast to int due to risk of overflow.");
+    }
+    return substring(s, (int) from, (int) for_);
+  }
+
+  public static String substring(String s, long from) {
+    if (from < Integer.MIN_VALUE || from > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("Cannot be cast to int due to risk of overflow.");
+    }
+    return substring(s, (int) from);
+  }
+
+  public static ByteString substring(ByteString b, long from, long for_) {
+    if (from < Integer.MIN_VALUE || from > Integer.MAX_VALUE || for_ < Integer.MIN_VALUE
+        || for_ > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("Cannot be cast to int due to risk of overflow.");
+    }
+    return substring(b, (int) from, (int) for_);
+  }
+
+  public static ByteString substring(ByteString b, long from) {
+    if (from < Integer.MIN_VALUE || from > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("Cannot be cast to int due to risk of overflow.");
+    }
+    return substring(b, (int) from);
+  }
+
   /** SQL UPPER(string) function. */
   //overrivde
   public static String upper(String s) {
