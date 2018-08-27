@@ -1902,7 +1902,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
   }
 
   private static List<RexNode>
-  convertOpsToTimeStampOps(RexBuilder rexBuilder, List<RexNode> nodes) {
+      convertOpsToTimeStampOps(RexBuilder rexBuilder, List<RexNode> nodes) {
     RexNode op2 = nodes.get(0);
     RexNode op1 = nodes.get(1);
     SqlTypeName optp1 = op1.getType().getSqlTypeName();
@@ -1912,10 +1912,10 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       return nodes;
     }
     RelDataTypeFactory dtFactory = rexBuilder.getTypeFactory();
-    List<RexNode> convertedNodes = Lists.newArrayList();
+    List<RexNode> convertedNodes = new ArrayList<>();
     for (RexNode node : nodes) {
       SqlTypeName type = node.getType().getSqlTypeName();
-      if (!type.equals(SqlTypeName.TIMESTAMP)) {
+      if (type != SqlTypeName.TIMESTAMP) {
         RelDataType convertType = dtFactory.createSqlType(SqlTypeName.TIMESTAMP,
                 node.getType().getPrecision());
         node = rexBuilder.makeCast(convertType, node);
