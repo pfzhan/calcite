@@ -26,6 +26,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCallBinding;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexRangeRef;
@@ -71,6 +72,7 @@ import org.apache.calcite.sql.fun.SqlSubstringFunction;
 import org.apache.calcite.sql.fun.SqlTrimFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker.Consistency;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
@@ -977,8 +979,14 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           exprs.add(cx.getRexBuilder().ensureType(type, expr, true)));
     }
     if (exprs.size() > 1) {
-      final RelDataType type =
-          consistentType(cx, consistency, RexUtil.types(exprs));
+      RelDataType type =
+              consistentType(cx, consistency, RexUtil.types(exprs));
+
+      /* OVERRIDE POINT */
+      if (type == null) {
+        type = consistentType2(cx, consistency, exprs);
+      }
+
       if (type != null) {
         final List<RexNode> oldExprs = new ArrayList<>(exprs);
         exprs.clear();
@@ -988,6 +996,34 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       }
     }
     return exprs;
+  }
+
+  /* OVERRIDE POINT */
+  // https://github.com/Kyligence/KAP/issues/4037
+  // For LEAST_RESTRICTIVE consistency, which is the '=' operator, convert constants implicitly
+  private static RelDataType consistentType2(SqlRexContext cx,
+      Consistency consistency, List<RexNode> exprs) {
+    if (Consistency.LEAST_RESTRICTIVE != consistency) {
+      return null;
+    }
+    if (exprs.size() <= 1) {
+      return null;
+    }
+
+    // check all expressions are constants but one
+    RexNode oneNonConst = null;
+    for (RexNode expr : exprs) {
+      if (expr instanceof RexLiteral || expr instanceof RexDynamicParam) {
+        continue;
+      }
+      // got a non-constant
+      if (oneNonConst != null) {
+        return null; // give up, since there is more than one non-constant
+      }
+      oneNonConst = expr;
+    }
+
+    return oneNonConst == null ? null : oneNonConst.getType();
   }
 
   private static @Nullable RelDataType consistentType(SqlRexContext cx,
