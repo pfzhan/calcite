@@ -644,11 +644,14 @@ public class RexSimplify {
   // package-protected only for a deprecated method; treat as private
   RexNode simplifyAnds(Iterable<? extends RexNode> nodes,
       RexUnknownAs unknownAs) {
-    final List<RexNode> terms = new ArrayList<>();
+    List<RexNode> terms = new ArrayList<>();
     final List<RexNode> notTerms = new ArrayList<>();
     for (RexNode e : nodes) {
       RelOptUtil.decomposeConjunction(e, terms, notTerms);
     }
+    /* OVERRIDE POINT */
+    //https://github.com/Kyligence/KAP/issues/7521
+    terms = new ArrayList<>(new LinkedHashSet<>(terms)); // to eliminate duplicates
     simplifyList(terms, UNKNOWN);
     simplifyList(notTerms, UNKNOWN);
     if (unknownAs == FALSE) {
@@ -1481,7 +1484,7 @@ public class RexSimplify {
       simplifyList(operands, unknownAs);
     }
 
-    final List<RexNode> terms = new ArrayList<>();
+    List<RexNode> terms = new ArrayList<>();
     final List<RexNode> notTerms = new ArrayList<>();
 
     final SargCollector sargCollector = new SargCollector(rexBuilder, true);
@@ -1497,6 +1500,9 @@ public class RexSimplify {
       RelOptUtil.decomposeConjunction(o, terms, notTerms);
     }
 
+    /* OVERRIDE POINT */
+    //https://github.com/Kyligence/KAP/issues/7521
+    terms = new ArrayList<>(new LinkedHashSet<>(terms)); // to eliminate duplicates
     switch (unknownAs) {
     case FALSE:
       return simplifyAnd2ForUnknownAsFalse(terms, notTerms, Comparable.class);
