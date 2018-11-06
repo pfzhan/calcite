@@ -25,7 +25,7 @@ import org.apache.calcite.sql.SqlDialect;
 public class H2SqlDialect extends SqlDialect {
   public static final Context DEFAULT_CONTEXT = SqlDialect.EMPTY_CONTEXT
       .withDatabaseProduct(SqlDialect.DatabaseProduct.H2)
-      .withIdentifierQuoteString("\"");
+      .withIdentifierQuoteString("`");
 
   public static final SqlDialect DEFAULT = new H2SqlDialect(DEFAULT_CONTEXT);
 
