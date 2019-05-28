@@ -3043,7 +3043,11 @@ public class SqlToRelConverter {
       return call;
     case CAST:
       call = (RexCall) node;
-      return  call.getOperands().get(0);
+      RexNode expr = call.getOperands().get(0);
+      if (expr instanceof RexLiteral || expr instanceof RexDynamicParam) {
+        return call;
+      }
+      return expr;
     default:
       return node;
     }
