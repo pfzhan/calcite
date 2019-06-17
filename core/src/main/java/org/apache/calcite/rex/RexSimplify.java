@@ -62,6 +62,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 import static org.apache.calcite.rex.RexUnknownAs.FALSE;
@@ -651,13 +652,13 @@ public class RexSimplify {
     }
     /* OVERRIDE POINT */
     //https://github.com/Kyligence/KAP/issues/7521
-    terms = new ArrayList<>(new LinkedHashSet<>(terms)); // to eliminate duplicates
-    simplifyList(terms, UNKNOWN);
+    List<RexNode> termsDistinct = terms.stream().distinct().collect(Collectors.toList());
+    simplifyList(termsDistinct, UNKNOWN);
     simplifyList(notTerms, UNKNOWN);
     if (unknownAs == FALSE) {
-      return simplifyAnd2ForUnknownAsFalse(terms, notTerms);
+      return simplifyAnd2ForUnknownAsFalse(termsDistinct, notTerms);
     }
-    return simplifyAnd2(terms, notTerms);
+    return simplifyAnd2(termsDistinct, notTerms);
   }
 
   private void simplifyList(List<RexNode> terms, RexUnknownAs unknownAs) {
@@ -1484,7 +1485,7 @@ public class RexSimplify {
       simplifyList(operands, unknownAs);
     }
 
-    List<RexNode> terms = new ArrayList<>();
+    final List<RexNode> terms = new ArrayList<>();
     final List<RexNode> notTerms = new ArrayList<>();
 
     final SargCollector sargCollector = new SargCollector(rexBuilder, true);
@@ -1502,14 +1503,14 @@ public class RexSimplify {
 
     /* OVERRIDE POINT */
     //https://github.com/Kyligence/KAP/issues/7521
-    terms = new ArrayList<>(new LinkedHashSet<>(terms)); // to eliminate duplicates
+    List<RexNode> termsDistinct = terms.stream().distinct().collect(Collectors.toList()); // to eliminate duplicates
     switch (unknownAs) {
     case FALSE:
-      return simplifyAnd2ForUnknownAsFalse(terms, notTerms, Comparable.class);
+      return simplifyAnd2ForUnknownAsFalse(termsDistinct, notTerms, Comparable.class);
     default:
       break;
     }
-    return simplifyAnd2(terms, notTerms);
+    return simplifyAnd2(termsDistinct, notTerms);
   }
 
   // package-protected only to support a deprecated method; treat as private

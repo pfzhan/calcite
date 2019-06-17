@@ -101,8 +101,9 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner {
 
     this.cancelFlag =
         context.maybeUnwrap(CancelFlag.class)
-            .map(flag -> flag.atomicBoolean)
-            .orElseGet(AtomicBoolean::new);
+            .map(flag -> flag)
+            .orElseGet(CancelFlag::getContextCancelFlag)
+            .atomicBoolean;
 
     // Add abstract RelNode classes. No RelNodes will ever be registered with
     // these types, but some operands may use them.
@@ -139,6 +140,7 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner {
    */
   public void checkCancel() {
     if (cancelFlag.get()) {
+      cancelFlag.set(false);
       throw RESOURCE.preparationAborted().ex();
     }
   }
