@@ -1292,6 +1292,16 @@ public class SqlToRelConverter {
 
       if (query instanceof SqlNodeList) {
         SqlNodeList valueList = (SqlNodeList) query;
+
+        // keep in clause.
+        if (!valueList.accept(new SqlIdentifierFinder())
+            && Boolean.valueOf(System.getProperty("calcite.keep-in-clause", "false"))) {
+          RexNode subQueryExpr = constructIn(bb, leftKeys, valueList, call.getOperator().kind);
+          if (subQueryExpr != null) {
+            subQuery.expr = subQueryExpr;
+            return;
+          }
+        }
         // When the list size under the threshold or the list references columns, we convert to OR.
         if (valueList.size() < config.getInSubQueryThreshold()
             || valueList.accept(new SqlIdentifierFinder())) {
@@ -1477,6 +1487,24 @@ public class SqlToRelConverter {
     default:
       throw new AssertionError("unexpected kind of sub-query: "
           + subQuery.node);
+    }
+  }
+
+  private RexNode constructIn(Blackboard bb, List<RexNode> leftKeys, SqlNodeList valuesList,
+      SqlKind kind) {
+    List<RexNode> listRexNodes = new ArrayList<>(leftKeys);
+    for (SqlNode node : valuesList) {
+      listRexNodes.add(bb.convertExpression(node));
+    }
+
+    switch (kind) {
+    case NOT_IN:
+      return rexBuilder.makeCall(SqlStdOperatorTable.NOT_IN, listRexNodes);
+    case IN:
+    case SOME:
+      return rexBuilder.makeCall(SqlStdOperatorTable.IN, listRexNodes);
+    default:
+      return null;
     }
   }
 
