@@ -154,6 +154,10 @@ public enum CalciteConnectionProperty implements ConnectionProperty {
   /* OVERRIDE POINT */
   CUSTOMER_VALIDATOR("customerValidator", Type.STRING, null, false),
 
+  /* OVERRIDE POINT */
+  // https://github.com/Kyligence/KAP/issues/10964
+  PROJECT_UNDER_RELROOT("projectUnderRelRoot", Type.BOOLEAN, true, false),
+
   /** SQL conformance level.
    *
    * <p>Controls the semantics of ISO standard SQL features that are implemented

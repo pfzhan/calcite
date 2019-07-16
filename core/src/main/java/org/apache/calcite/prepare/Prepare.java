@@ -31,12 +31,16 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.core.TableModify;
+import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexExecutorImpl;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.runtime.Bindable;
 import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.runtime.Typed;
@@ -62,6 +66,7 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.util.Holder;
+import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.TryThreadLocal;
 import org.apache.calcite.util.trace.CalciteTimingTracer;
 import org.apache.calcite.util.trace.CalciteTrace;
@@ -291,6 +296,24 @@ public abstract class Prepare {
     if (this.context.config().forceDecorrelate()) {
       // Sub-query decorrelation.
       root = root.withRel(decorrelate(sqlToRelConverter, sqlQuery, root.rel));
+    }
+
+    /* OVERRIDE POINT */
+    // https://github.com/Kyligence/KAP/issues/10964
+    RelNode rel = root.rel;
+    if (context.config().projectUnderRelRoot() && !root.isRefTrivial()) {
+      final List<RexNode> projects = new ArrayList<>();
+      final RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+      for (int field : Pair.left(root.fields)) {
+        projects.add(rexBuilder.makeInputRef(rel, field));
+      }
+      LogicalProject project = LogicalProject.create(root.rel, ImmutableList.of(),
+          projects, root.validatedRowType);
+      //RelCollation must be cleared,
+      //otherwise, relRoot's top rel will be reset to LogicalSort
+      //in org.apache.calcite.tools.Programs#standard's program1
+      root = new RelRoot(project, root.validatedRowType, root.kind, root.fields,
+          RelCollations.EMPTY, ImmutableList.of());
     }
 
     // Trim unused fields.

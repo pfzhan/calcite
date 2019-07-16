@@ -202,6 +202,13 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
         .getEnum(SqlConformanceEnum.class);
   }
 
+  /* OVERRIDE POINT */
+  // https://github.com/Kyligence/KAP/issues/10964
+  public boolean projectUnderRelRoot() {
+    return CalciteConnectionProperty.PROJECT_UNDER_RELROOT.wrap(properties)
+            .getBoolean(true);
+  }
+
   @Override public String timeZone() {
     return CalciteConnectionProperty.TIME_ZONE.wrap(properties)
             .getString();
