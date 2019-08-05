@@ -24,6 +24,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.TableScan;
@@ -133,6 +134,12 @@ public class OLAPJoinPushThroughJoinRule2 extends RelRule<OLAPJoinPushThroughJoi
     //            return;
     //        }
 
+    // right join cannot be pushed through inner
+    if (topJoin.getJoinType() == JoinRelType.RIGHT
+            && bottomJoin.getJoinType() == JoinRelType.INNER) {
+      return;
+    }
+
     // Split the condition of topJoin into a conjunction. Each of the
     // parts that does not use columns from B can be pushed down.
     final List<RexNode> intersecting = new ArrayList<>();
@@ -165,7 +172,7 @@ public class OLAPJoinPushThroughJoinRule2 extends RelRule<OLAPJoinPushThroughJoi
     final RexBuilder rexBuilder = cluster.getRexBuilder();
     RexNode newBottomCondition = RexUtil.composeConjunction(rexBuilder, newBottomList, false);
     final Join newBottomJoin = bottomJoin.copy(bottomJoin.getTraitSet(),
-            newBottomCondition, relA, relC, bottomJoin.getJoinType(), bottomJoin.isSemiJoinDone());
+            newBottomCondition, relA, relC, topJoin.getJoinType(), bottomJoin.isSemiJoinDone());
 
     // target: | A       | C      | B |
     // source: | A       | B | C      |
@@ -180,7 +187,7 @@ public class OLAPJoinPushThroughJoinRule2 extends RelRule<OLAPJoinPushThroughJoi
     RexNode newTopCondition = RexUtil.composeConjunction(rexBuilder, newTopList, false);
     @SuppressWarnings("SuspiciousNameCombination")
     final Join newTopJoin = topJoin.copy(topJoin.getTraitSet(), newTopCondition,
-            newBottomJoin, relB, topJoin.getJoinType(), topJoin.isSemiJoinDone());
+            newBottomJoin, relB, bottomJoin.getJoinType(), topJoin.isSemiJoinDone());
 
     assert !Mappings.isIdentity(thruProjectMapping);
     final RelBuilder relBuilder = call.builder();
