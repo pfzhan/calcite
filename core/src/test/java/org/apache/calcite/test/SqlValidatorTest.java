@@ -2264,6 +2264,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase {
         .columnType("TIMESTAMP(0)");
   }
 
+  @Test void testTimeStampLiterals() {
+    final RelDataTypeSystem typeSystem =
+        fixture().factory.getTypeFactory().getTypeSystem();
+    assertThat(typeSystem.getDefaultPrecision(SqlTypeName.TIMESTAMP), is(6));
+    assertThat(typeSystem.getDefaultPrecision(SqlTypeName.TIMESTAMP_WITH_LOCAL_TIME_ZONE), is(6));
+  }
+
   @Test void testIntervalLiterals() {
     // First check that min, max, and defaults are what we expect
     // (values used in subtests depend on these being true to
