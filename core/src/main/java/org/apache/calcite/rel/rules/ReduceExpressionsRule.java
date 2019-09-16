@@ -16,6 +16,7 @@
  */
 package org.apache.calcite.rel.rules;
 
+
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPredicateList;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -56,11 +57,15 @@ import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUnknownAs;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.schema.ScalarFunction;
+import org.apache.calcite.schema.impl.ScalarFunctionImpl;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlRowOperator;
+import org.apache.calcite.sql.type.NotConstant;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -1095,6 +1100,16 @@ public abstract class ReduceExpressionsRule<C extends ReduceExpressionsRule.Conf
 
       // visit operands, pushing their states onto stack
       super.visitCall(call);
+
+      if (call.op instanceof SqlUserDefinedFunction) {
+        if (((SqlUserDefinedFunction) call.op).function instanceof ScalarFunction) {
+          Class<?>[] interfaces = ((ScalarFunctionImpl) ((SqlUserDefinedFunction) call.op).function)
+                  .method.getDeclaringClass().getInterfaces();
+          if (interfaces.length == 1 && interfaces[0].isAssignableFrom(NotConstant.class)) {
+            callConstancy = Constancy.NON_CONSTANT;
+          }
+        }
+      }
 
       // look for NON_CONSTANT operands
       int operandCount = call.getOperands().size();
