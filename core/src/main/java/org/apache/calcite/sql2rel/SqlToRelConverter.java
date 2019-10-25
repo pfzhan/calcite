@@ -1295,7 +1295,9 @@ public class SqlToRelConverter {
 
         // keep in clause.
         if (!valueList.accept(new SqlIdentifierFinder())
-            && Boolean.valueOf(System.getProperty("calcite.keep-in-clause", "false"))) {
+            && Boolean.parseBoolean(System.getProperty("calcite.keep-in-clause", "false"))
+            && (leftKeys.size() <= 1
+            || !Boolean.parseBoolean(System.getProperty("calcite.convert-multiple-columns-in-to-or", "false")))) {
           RexNode subQueryExpr = constructIn(bb, leftKeys, valueList, call.getOperator().kind);
           if (subQueryExpr != null) {
             subQuery.expr = subQueryExpr;
