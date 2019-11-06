@@ -30,6 +30,7 @@ import org.apache.calcite.rel.core.Calc;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.logical.LogicalFilter;
@@ -179,7 +180,8 @@ public abstract class ReduceExpressionsRule<C extends ReduceExpressionsRule.Conf
             filter.getInput());
       } else if (newConditionExp instanceof RexLiteral
           || RexUtil.isNullLiteral(newConditionExp, true)) {
-        call.transformTo(createEmptyRelOrEquivalent(call, filter));
+        Values values = (Values) createEmptyRelOrEquivalent(call, filter);
+        call.transformTo(values.copy(call.rel(0).getTraitSet(), values.getInputs()));
       } else if (reduced) {
         call.transformTo(call.builder()
             .push(filter.getInput())
