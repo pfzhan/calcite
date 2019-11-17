@@ -958,6 +958,43 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     return list;
   }
 
+  public static Boolean isDateCompareWithCharacter(List<RelDataType> types) {
+    if (types.size() >= 2
+            && ((types.get(0).getFamily().equals(SqlTypeFamily.DATE)
+            && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
+            || (types.get(1).getFamily().equals(SqlTypeFamily.DATE)
+            && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
+      return true;
+    }
+    return false;
+  }
+
+  public static Boolean isTimestampCompareWithCharacter(List<RelDataType> types) {
+    if (types.size() >= 2
+            && ((types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
+            && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
+            || (types.get(1).getFamily().equals(SqlTypeFamily.TIMESTAMP)
+            && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
+      return true;
+    }
+    return false;
+  }
+
+  public static RelDataType findMaxPrecisionCharType(List<RelDataType> types) {
+    RelDataType largestCharType = null;
+    for (RelDataType dataType : types) {
+      if (dataType.getFamily().equals(SqlTypeFamily.CHARACTER)) {
+        if (largestCharType == null) {
+          largestCharType = dataType;
+        } else {
+          largestCharType = largestCharType.getPrecision()
+                  > dataType.getPrecision() ? largestCharType : dataType;
+        }
+      }
+    }
+    return largestCharType;
+  }
+
   private static List<RexNode> convertOperands(SqlRexContext cx,
       SqlCall call, SqlOperandTypeChecker.Consistency consistency) {
     return convertOperands(cx, call, call.getOperandList(), consistency);
@@ -1009,6 +1046,9 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     if (exprs.size() <= 1) {
       return null;
     }
+    if (isTimestampCompareWithCharacter(RexUtil.types(exprs))) {
+      return null;
+    }
 
     // check all expressions are constants but one
     RexNode oneNonConst = null;
@@ -1030,6 +1070,12 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       SqlOperandTypeChecker.Consistency consistency, List<RelDataType> types) {
     switch (consistency) {
     case COMPARE:
+      if (isDateCompareWithCharacter(types)) {
+        return findMaxPrecisionCharType(types);
+      }
+      if (isTimestampCompareWithCharacter(types)) {
+        return findMaxPrecisionCharType(types);
+      }
       if (SqlTypeUtil.areSameFamily(types)) {
         // All arguments are of same family. No need for explicit casts.
         return null;
@@ -1063,6 +1109,9 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       }
       // fall through
     case LEAST_RESTRICTIVE:
+      if (isDateCompareWithCharacter(types)) {
+        return findMaxPrecisionCharType(types);
+      }
       return cx.getTypeFactory().leastRestrictive(types);
     default:
       return null;
