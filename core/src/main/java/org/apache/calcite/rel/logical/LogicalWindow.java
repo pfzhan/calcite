@@ -21,9 +21,12 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.metadata.RelMdCollation;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
@@ -40,6 +43,8 @@ import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -278,8 +283,17 @@ public final class LogicalWindow extends Window {
           }
         };
 
+    final RelMetadataQuery mq = cluster.getMetadataQuery();
+    final RelNode input = child;
+    final ImmutableList<Group> winGroups = ImmutableList.copyOf(groups);
+    RelTraitSet correctedTraitSet = cluster.traitSet()
+            .replaceIfs(RelCollationTraitDef.INSTANCE, new Supplier<List<RelCollation>>() {
+              public List<RelCollation> get() {
+                return RelMdCollation.window(mq, input, winGroups);
+              }
+            });
     final LogicalWindow window =
-        LogicalWindow.create(traitSet, child, constants, intermediateRowType,
+        LogicalWindow.create(correctedTraitSet, child, constants, intermediateRowType,
             groups);
 
     // The order that the "over" calls occur in the groups and
