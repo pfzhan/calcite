@@ -35,7 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *   <tr><td>MAX_NUMERIC_SCALE</td> <td>19</td></tr>
  * </table>
  */
-public abstract class RelDataTypeSystemImpl implements RelDataTypeSystem {
+public abstract class RelDataTypeSystemImpl extends AbstractRelDataTypeSystem {
   @Override public int getMaxScale(SqlTypeName typeName) {
     switch (typeName) {
     case DECIMAL:
