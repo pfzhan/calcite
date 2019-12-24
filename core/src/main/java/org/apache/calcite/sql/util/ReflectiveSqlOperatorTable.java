@@ -139,11 +139,11 @@ public abstract class ReflectiveSqlOperatorTable
 
   /**
    * Registers a function or operator in the table.
-   *
-   * @deprecated This table is designed to be initialized from the fields of
+   * <p>
+   * This table is designed to be initialized from the fields of
    * a class, and adding operators is not efficient
    */
-  @Deprecated
+  // @Deprecated
   public void register(SqlOperator op) {
     // Rebuild the immutable collections with their current contents plus one.
     setOperators(buildIndex(ConsList.of(op, getOperatorList())));

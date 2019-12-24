@@ -1135,6 +1135,10 @@ public class RexImpTable {
     }
   }
 
+  public void defineImplementor(SqlOperator operator, CallImplementor implementor) {
+    map.of(operator, wrapAsRexCallImplementor(implementor));
+  }
+
   public static CallImplementor createImplementor(
       final NotNullImplementor implementor,
       final NullPolicy nullPolicy,
