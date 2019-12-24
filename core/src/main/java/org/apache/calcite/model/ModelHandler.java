@@ -16,6 +16,8 @@
  */
 package org.apache.calcite.model;
 
+import org.apache.calcite.adapter.enumerable.CallImplementor;
+import org.apache.calcite.adapter.enumerable.RexImpTable;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.avatica.AvaticaUtils;
 import org.apache.calcite.jdbc.CalciteConnection;
@@ -41,6 +43,10 @@ import org.apache.calcite.schema.impl.TableFunctionImpl;
 import org.apache.calcite.schema.impl.TableMacroImpl;
 import org.apache.calcite.schema.impl.ViewTable;
 import org.apache.calcite.sql.SqlDialectFactory;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.fun.udf.UdfDef;
+import org.apache.calcite.sql.fun.udf.UdfEmptyImplementor;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
@@ -137,6 +143,27 @@ public class ModelHandler {
       throw new RuntimeException("UDF class '"
           + className + "' not found");
     }
+
+    if (UdfDef.class.isAssignableFrom(clazz)) {
+      SqlOperator udfOp;
+      try {
+        udfOp = (SqlOperator) clazz.getField("OPERATOR").get(null);
+      } catch (IllegalAccessException | NoSuchFieldException e) {
+        throw new IllegalStateException("Invalid UdfDef " + className, e);
+      }
+
+      CallImplementor udfImpl = UdfEmptyImplementor.INSTANCE;
+      try {
+        udfImpl = (CallImplementor) clazz.getField("IMPLEMENTOR").get(null);
+      } catch (IllegalAccessException | NoSuchFieldException e) {
+          // IMPLEMENTOR may not be a mandatory field
+      }
+
+      SqlStdOperatorTable.instance().register(udfOp);
+      RexImpTable.INSTANCE.defineImplementor(udfOp, udfImpl);
+      return;
+    }
+
     String methodNameOrDefault = Util.first(methodName, "eval");
     String actualFunctionName;
     if (functionName != null) {
