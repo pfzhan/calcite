@@ -110,4 +110,8 @@ public interface CalciteConnectionConfig extends ConnectionConfig {
   boolean lenientOperatorLookup();
   /** Returns the value of {@link CalciteConnectionProperty#TOPDOWN_OPT}. */
   boolean topDownOpt();
+
+  /* OVERRIDE POINT */
+  // https://github.com/Kyligence/KAP/issues/17294
+  <T> T getCustomerValidation(Class<T> validationClass, T defaultValidation);
 }

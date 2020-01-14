@@ -661,16 +661,6 @@ public class SqlToRelConverter {
 
     //
     RelNode input = rootPrj.getInput();
-    //        if (!(//
-    //                isAmong(input, "OLAPTableScan", "LogicalJoin")//
-    //                || (isAmong(input, "LogicalFilter")
-    //                && isAmong(input.getInput(0), "OLAPTableScan", "LogicalJoin"))//
-    //             ))
-    //            return root;
-    //
-    //        if (rootPrj.getRowType().getFieldCount() < input.getRowType().getFieldCount())
-    //            return root;
-
     RelDataType inType = rootPrj.getRowType();
     List<String> inFields = inType.getFieldNames();
     List<RexNode> projExp = new ArrayList<>();
