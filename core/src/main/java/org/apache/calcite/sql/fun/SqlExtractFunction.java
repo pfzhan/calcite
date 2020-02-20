@@ -25,6 +25,7 @@ import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.calcite.util.Util;
 
@@ -43,7 +44,10 @@ public class SqlExtractFunction extends SqlFunction {
   // TODO: Return type should be decimal for seconds
   public SqlExtractFunction() {
     super("EXTRACT", SqlKind.EXTRACT, ReturnTypes.BIGINT_NULLABLE, null,
-        OperandTypes.INTERVALINTERVAL_INTERVALDATETIME,
+        OperandTypes.or(OperandTypes.INTERVAL_SAME_SAME,
+            OperandTypes.INTERVAL_DATETIME,
+            OperandTypes.family(SqlTypeFamily.DATETIME_INTERVAL, SqlTypeFamily.STRING),
+            OperandTypes.family(SqlTypeFamily.DATETIME_INTERVAL, SqlTypeFamily.TIMESTAMP)),
         SqlFunctionCategory.SYSTEM);
   }
 
