@@ -2008,6 +2008,10 @@ public class SqlFunctions {
     return number.byteValue();
   }
 
+  public static byte toByte(String s) {
+    return (byte) Double.parseDouble(s);
+  }
+
   public static char toChar(String s) {
     return s.charAt(0);
   }
@@ -2017,7 +2021,7 @@ public class SqlFunctions {
   }
 
   public static short toShort(String s) {
-    return Short.parseShort(s.trim());
+    return (short) Double.parseDouble(s.trim());
   }
 
   public static short toShort(Number number) {
@@ -2071,7 +2075,7 @@ public class SqlFunctions {
   }
 
   public static int toInt(String s) {
-    return Integer.parseInt(s.trim());
+    return (int) Double.parseDouble(s.trim());
   }
 
   public static int toInt(Number number) {
