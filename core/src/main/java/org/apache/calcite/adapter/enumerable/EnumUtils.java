@@ -366,6 +366,7 @@ public class EnumUtils {
       if (toPrimitive != null) {
         switch (toPrimitive) {
         case CHAR:
+        case BYTE:
         case SHORT:
         case INT:
         case LONG:
