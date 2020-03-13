@@ -3800,7 +3800,7 @@ public class SqlFunctions {
     if (s.startsWith("199") && s.contains(":")) {
       return Timestamp.valueOf(s).getTime();
     }
-    return Long.parseLong(s.trim());
+    return (long) Double.parseDouble(s.trim());
   }
 
   public static long toLong(Number number) {
