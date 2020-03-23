@@ -432,10 +432,42 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
     // parentheses-free functions such as LOCALTIME into explicit function
     // calls.
     SqlNode expanded = expandSelectExpr(selectItem, scope, select);
-    final String alias =
+    String alias =
         deriveAliasNonNull(
             selectItem,
             aliases.size());
+    // if the alias derived is found in already generated aliases set
+    // then there is a chance that two selectItem(SqlIdentifier) appear to have the same name
+    // In that case, we need to derive a different name for such selectItem
+    // eg.
+    // SELECT * FROM (
+    //   SELECT order_id, test_kylin_fact.cal_dt, edw.test_cal_dt.cal_dt
+    //   FROM test_kylin_fact LEFT JOIN edw.test_cal_dt
+    //   ON test_kylin_fact.order_id = test_cal_dt.DAY_OF_CAL_ID
+    // ) T where T.order_id = 4752
+    if (aliases.contains(alias) && selectItem instanceof SqlIdentifier) {
+      boolean foundEqualSelectNode = false;
+      int sameNameIdentifierCount = -1;
+      for (SqlNode item : selectItems) {
+        if (item instanceof SqlIdentifier) {
+          // if same selectItem appears before, then it is okay for them to share the same alias
+          if (item.equalsDeep(selectItem, Litmus.IGNORE)) {
+            foundEqualSelectNode = true;
+            break;
+          }
+          // count the same name selectItem
+          if (Objects.equals(
+                  Util.last(((SqlIdentifier) item).names),
+                  Util.last(((SqlIdentifier) selectItem).names))) {
+            sameNameIdentifierCount++;
+          }
+        }
+      }
+      if (!foundEqualSelectNode) {
+        Preconditions.checkArgument(sameNameIdentifierCount > -1);
+        alias += sameNameIdentifierCount;
+      }
+    }
 
     // If expansion has altered the natural alias, supply an explicit 'AS'.
     final SqlValidatorScope selectScope = getSelectScope(select);
