@@ -58,10 +58,11 @@ class SqlTimestampDiffFunction extends SqlFunction {
   private static final SqlReturnTypeInference RETURN_TYPE_INFERENCE =
       opBinding -> {
         final RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
-        SqlTypeName sqlTypeName =
-            opBinding.getOperandLiteralValue(0, TimeUnit.class) == TimeUnit.NANOSECOND
-                ? SqlTypeName.BIGINT
-                : SqlTypeName.INTEGER;
+//        SqlTypeName sqlTypeName =
+//            opBinding.getOperandLiteralValue(0, TimeUnit.class) == TimeUnit.NANOSECOND
+//                ? SqlTypeName.BIGINT
+//                : SqlTypeName.INTEGER;
+        SqlTypeName sqlTypeName = SqlTypeName.BIGINT;
         return typeFactory.createTypeWithNullability(
             typeFactory.createSqlType(sqlTypeName),
             opBinding.getOperandType(1).isNullable()
