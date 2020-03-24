@@ -2268,11 +2268,11 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           rexBuilder.makeCall(intervalType,
               SqlStdOperatorTable.MINUS_DATE,
               ImmutableList.of(truncateFn.apply(op2), truncateFn.apply(op1)));
-      final RelDataType intType =
+      final RelDataType bigIntType =
           typeFactory.createTypeWithNullability(
-              typeFactory.createSqlType(sqlTypeName),
+              typeFactory.createSqlType(SqlTypeName.BIGINT),
               SqlTypeUtil.containsNullable(call2.getType()));
-      RexNode e = rexBuilder.makeCast(intType, call2);
+      RexNode e = rexBuilder.makeCast(bigIntType, call2);
       return rexBuilder.multiplyDivide(e, multiplier, divider);
     }
   }

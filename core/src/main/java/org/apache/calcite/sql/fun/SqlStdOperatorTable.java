@@ -1363,6 +1363,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
   public static final SqlDatetimeSubtractionOperator MINUS_DATE =
       new SqlDatetimeSubtractionOperator("-", ReturnTypes.ARG2_NULLABLE);
 
+  public static final SqlDateTimeDivisionOperator DIVIDE_DATE =
+      new SqlDateTimeDivisionOperator();
+
   /**
    * The MULTISET Value Constructor. e.g. "<code>MULTISET[1,2,3]</code>".
    */

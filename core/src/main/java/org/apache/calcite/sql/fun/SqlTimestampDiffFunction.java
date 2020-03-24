@@ -72,10 +72,11 @@ class SqlTimestampDiffFunction extends SqlFunction {
       type2 = opBinding.getOperandType(1);
       timeUnit = opBinding.getOperandLiteralValue(2, TimeUnit.class);
     }
-    SqlTypeName sqlTypeName =
-        timeUnit == TimeUnit.NANOSECOND
-            ? SqlTypeName.BIGINT
-            : SqlTypeName.INTEGER;
+    // SqlTypeName sqlTypeName =
+    //     timeUnit == TimeUnit.NANOSECOND
+    //         ? SqlTypeName.BIGINT
+    //         : SqlTypeName.INTEGER;
+    SqlTypeName sqlTypeName = SqlTypeName.BIGINT;
     return typeFactory.createTypeWithNullability(
         typeFactory.createSqlType(sqlTypeName),
         type1.isNullable()
