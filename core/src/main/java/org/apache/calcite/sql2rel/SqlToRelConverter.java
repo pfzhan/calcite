@@ -632,10 +632,9 @@ public class SqlToRelConverter {
     }
     // propagate the hints.
     result = RelOptUtil.propagateRelHints(result, false);
-    RelRoot origResult = RelRoot.of(result, validatedRowType, query.getKind())
+    return RelRoot.of(result, validatedRowType, query.getKind())
         .withCollation(collation)
         .withHints(hints);
-    return hackSelectStar(origQuery, origResult);
   }
 
   /* OVERRIDE POINT */
