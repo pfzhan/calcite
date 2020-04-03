@@ -559,7 +559,7 @@ public class SqlFunctions {
   /** SQL {@code TRIM(... seek FROM s)} function. */
   public static String trim(boolean left, boolean right, String seek,
       String s) {
-    return trim(left, right, seek, s, true);
+    return trim(left, right, seek, s, false);
   }
 
   public static String trim(boolean left, boolean right, String seek,

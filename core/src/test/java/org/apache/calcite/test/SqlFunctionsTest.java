@@ -282,8 +282,21 @@ class SqlFunctionsTest {
     assertThat(trimSpacesBoth("x"), is("x"));
   }
 
+  /** Test for {@link SqlFunctions#trim}. */
+  @Test public void testTrimBoth() {
+    assertThat(trimSeekBoth("io", "ioabcdeio"), is("abcde"));
+    assertThat(trimSeekBoth("ia", "iabcdei"), is("bcde"));
+    assertThat(trimSeekBoth("i o", "i oabcdei o"), is("abcde"));
+    assertThat(trimSeekBoth("i", "i abc de i"), is(" abc de "));
+    assertThat(trimSeekBoth("ia3b", "iabcdeiba"), is("cde"));
+  }
+
+  static String trimSeekBoth(String seek, String s) {
+    return trim(true, true, seek, s);
+  }
+
   static String trimSpacesBoth(String s) {
-    return trim(true, true, " ", s);
+    return trimSeekBoth(" ", s);
   }
 
   @Test void testAddMonths() {
