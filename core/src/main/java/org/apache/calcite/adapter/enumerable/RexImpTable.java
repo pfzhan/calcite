@@ -201,6 +201,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DEFAULT;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DEGREES;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DENSE_RANK;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE_DATE;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DIVIDE_INTEGER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.ELEMENT;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.EQUALS;
@@ -410,6 +411,7 @@ public class RexImpTable {
     defineBinary(MULTIPLY, Multiply, NullPolicy.STRICT, "multiply");
     defineBinary(DIVIDE, Divide, NullPolicy.STRICT, "divide");
     defineBinary(DIVIDE_INTEGER, Divide, NullPolicy.STRICT, "divide");
+    defineBinary(DIVIDE_DATE, Divide, NullPolicy.STRICT, "divide");
     defineUnary(UNARY_MINUS, Negate, NullPolicy.STRICT,
         BuiltInMethod.BIG_DECIMAL_NEGATE.getMethodName());
     defineUnary(UNARY_PLUS, UnaryPlus, NullPolicy.STRICT, null);
