@@ -63,8 +63,7 @@ class WithScope extends ListScope {
 
   @Override public void resolveTable(List<String> names,
       SqlNameMatcher nameMatcher, Path path, Resolved resolved) {
-    if (names.size() == 1
-        && names.equals(withItem.name.names)) {
+    if (isMatchedAlias(names)) {
       final SqlValidatorNamespace ns = validator.getNamespaceOrThrow(withItem);
       final Step path2 = path
           .plus(ns.getRowType(), 0, names.get(0), StructKind.FULLY_QUALIFIED);
@@ -74,4 +73,16 @@ class WithScope extends ListScope {
     super.resolveTable(names, nameMatcher, path, resolved);
   }
 
+  // a hacky way to match withItem name with table name, ignoring db name
+  private boolean isMatchedAlias(List<String> names) {
+    if (names.size() == 1 && names.equals(withItem.name.names)) {
+      return true;
+    }
+
+    if (names.size() == 2 && names.subList(1, 2).equals(withItem.name.names)) {
+      return true;
+    }
+
+    return false;
+  }
 }
