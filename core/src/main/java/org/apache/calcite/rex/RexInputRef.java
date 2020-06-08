@@ -69,6 +69,10 @@ public class RexInputRef extends RexSlot {
     super(createName(index), index, type);
   }
 
+  public RexInputRef(String name, int index, RelDataType type) {
+    super(name, index, type);
+  }
+
   //~ Methods ----------------------------------------------------------------
 
   @Override public boolean equals(@Nullable Object obj) {
@@ -88,11 +92,19 @@ public class RexInputRef extends RexSlot {
     return of(index, rowType.getFieldList());
   }
 
+  public static RexInputRef of(String name, int index, RelDataType rowType) {
+    return of(name, index, rowType.getFieldList());
+  }
+
   /**
    * Creates a reference to a given field in a list of fields.
    */
   public static RexInputRef of(int index, List<RelDataTypeField> fields) {
     return new RexInputRef(index, fields.get(index).getType());
+  }
+
+  public static RexInputRef of(String name, int index, List<RelDataTypeField> fields) {
+    return new RexInputRef(name, index, fields.get(index).getType());
   }
 
   /**
