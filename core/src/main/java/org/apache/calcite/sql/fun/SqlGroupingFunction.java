@@ -54,7 +54,7 @@ class SqlGroupingFunction extends SqlAbstractGroupFunction {
       SqlGroupingFunction::constant;
 
   SqlGroupingFunction(String name) {
-    super(name, SqlKind.GROUPING, ReturnTypes.BIGINT, null,
+    super(name, SqlKind.GROUPING, ReturnTypes.TINY_INT, null,
         OperandTypes.ONE_OR_MORE, SqlFunctionCategory.SYSTEM);
   }
 
