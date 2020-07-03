@@ -361,7 +361,12 @@ public abstract class ReturnTypes {
       INTEGER.andThen(SqlTypeTransforms.TO_NULLABLE);
 
   /**
-   * Type-inference strategy whereby the result type of a call is a BIGINT.
+   * Type-inference strategy whereby the result type of a call is an Tinyint.
+   */
+  public static final SqlReturnTypeInference TINY_INT = explicit(SqlTypeName.TINYINT);
+
+  /**
+   * Type-inference strategy whereby the result type of a call is a BIGINT
    */
   public static final SqlReturnTypeInference BIGINT =
       explicit(SqlTypeName.BIGINT);
