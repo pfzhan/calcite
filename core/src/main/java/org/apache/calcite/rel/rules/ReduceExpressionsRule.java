@@ -1125,7 +1125,8 @@ public abstract class ReduceExpressionsRule<C extends ReduceExpressionsRule.Conf
 
       // Even if all operands are constant, the call itself may
       // be non-deterministic.
-      if (!call.getOperator().isDeterministic() || call.getOperator().getKind() == SqlKind.IN) {
+      if (!call.getOperator().isDeterministic() || call.getOperator().getKind() == SqlKind.IN
+              || call.getOperator().getKind() == SqlKind.NOT_IN) {
         callConstancy = Constancy.NON_CONSTANT;
       } else if (!treatDynamicCallsAsConstant
           && call.getOperator().isDynamicFunction()) {
