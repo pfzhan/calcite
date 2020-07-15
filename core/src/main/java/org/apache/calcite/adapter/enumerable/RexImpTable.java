@@ -2286,6 +2286,15 @@ public class RexImpTable {
         final RexToLixTranslator translator,
         final RexCall call,
         final List<Expression> argValueList) {
+      // for division of integer
+      // cast integer operand to double before division
+      if (backupMethodName.equalsIgnoreCase("divide")) {
+        if (SqlTypeUtil.isIntType(call.getOperands().get(0).getType())
+                && SqlTypeUtil.isIntType(call.getOperands().get(1).getType())) {
+          argValueList.set(0, EnumUtils.convert(argValueList.get(0), Double.class));
+          argValueList.set(1, EnumUtils.convert(argValueList.get(1), Double.class));
+        }
+      }
       // neither nullable:
       //   return x OP y
       // x nullable
