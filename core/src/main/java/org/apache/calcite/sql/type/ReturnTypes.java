@@ -849,6 +849,24 @@ public abstract class ReturnTypes {
       DECIMAL_QUOTIENT.andThen(SqlTypeTransforms.TO_NULLABLE);
 
   /**
+   * Type-inference strategy for division of integers.
+   */
+  public static final SqlReturnTypeInference DOUBLE_QUOTIENT = opBinding -> {
+    RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+    RelDataType type1 = opBinding.getOperandType(0);
+    RelDataType type2 = opBinding.getOperandType(1);
+    return typeFactory.createDoubleQuotient(type1, type2);
+  };
+
+  /**
+   * Same as {@link #DOUBLE_QUOTIENT} but returns with nullability if any of
+   * the operands is nullable by using.
+   * {@link org.apache.calcite.sql.type.SqlTypeTransforms#TO_NULLABLE}
+   */
+  public static final SqlReturnTypeInference DOUBLE_QUOTIENT_NULLABLE =
+      DOUBLE_QUOTIENT.andThen(SqlTypeTransforms.TO_NULLABLE);
+
+  /**
   * Type-inference strategy whereby the result type of a call is
   * {@link #DOUBLE} if both operands are integer types.
   */
@@ -877,7 +895,8 @@ public abstract class ReturnTypes {
    * are used for division.
    */
   public static final SqlReturnTypeInference QUOTIENT_NULLABLE =
-      DECIMAL_QUOTIENT_NULLABLE.orElse(ARG0_INTERVAL_NULLABLE)
+      DECIMAL_QUOTIENT_NULLABLE.orElse(DOUBLE_QUOTIENT_NULLABLE)
+          .orElse(ARG0_INTERVAL_NULLABLE)
           .orElse(LEAST_RESTRICTIVE);
 
   /**

@@ -602,6 +602,21 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory {
     }
   }
 
+  /**
+   * Make quotient type double if it is int/int.
+   * @param type1 type of operand 1
+   * @param type2 type of operand 2
+   * @return
+   */
+  @Override public RelDataType createDoubleQuotient(
+          RelDataType type1,
+          RelDataType type2) {
+    if (SqlTypeUtil.isIntType(type1) && SqlTypeUtil.isIntType(type2)) {
+      return createSqlType(SqlTypeName.DOUBLE);
+    }
+    return null;
+  }
+
   @Override public Charset getDefaultCharset() {
     return Util.getDefaultCharset();
   }

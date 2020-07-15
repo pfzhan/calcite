@@ -338,6 +338,10 @@ public interface RelDataTypeFactory {
       RelDataType type1,
       RelDataType type2);
 
+  RelDataType createDoubleQuotient(
+          RelDataType type1,
+          RelDataType type2);
+
   /**
    * Create a decimal type equivalent to the numeric {@code type},
    * this is related to specific system implementation,
