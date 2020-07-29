@@ -219,6 +219,10 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
         .getBoolean();
   }
 
+  @Override public boolean skipConstantFoldingInProject() {
+    return false;
+  }
+
   @Override public boolean lenientOperatorLookup() {
     return CalciteConnectionProperty.LENIENT_OPERATOR_LOOKUP.wrap(properties)
         .getBoolean();
