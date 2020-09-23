@@ -1640,6 +1640,10 @@ public abstract class SqlTypeUtil {
     return type.getSqlTypeName() == SqlTypeName.ARRAY;
   }
 
+  public static boolean inStringFamily(RelDataType type) {
+    return SqlTypeFamily.STRING.getTypeNames().contains(type.getSqlTypeName());
+  }
+
   /** Returns whether a type is ROW. */
   public static boolean isRow(RelDataType type) {
     SqlTypeName typeName = type.getSqlTypeName();

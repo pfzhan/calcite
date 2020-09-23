@@ -571,6 +571,16 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
                                            SqlValidatorScope scope,
                                            SqlValidatorScope operandScope) {
           super.validateCall(call, validator, scope, operandScope);
+          if (call.getOperator() == SqlStdOperatorTable.PLUS) {
+            RelDataType type1 = validator.deriveType(scope, call.getOperandList().get(0));
+            RelDataType type2 = validator.deriveType(scope, call.getOperandList().get(1));
+            if (SqlTypeUtil.isNumeric(type1) && SqlTypeUtil.inStringFamily(type2)) {
+              return;
+            }
+            if (SqlTypeUtil.isNumeric(type2) && SqlTypeUtil.inStringFamily(type1)) {
+              return;
+            }
+          }
           for (SqlNode operand : call.getOperandList()) {
             if (operand instanceof SqlCharStringLiteral
                 && SqlTypeName.STRING_TYPES.contains(((SqlCharStringLiteral) operand).getTypeName())
@@ -582,13 +592,17 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
         }
 
         @Override public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+          RelDataType relDataType = ReturnTypes.NULLABLE_SUM.inferReturnType(opBinding);
+          if (relDataType != null) {
+            return relDataType;
+          }
           int opBindCnt = opBinding.getOperandCount();
           for (int i = 0; i < opBindCnt; i++) {
             if (SqlTypeUtil.inCharOrBinaryFamilies(opBinding.getOperandType(i))) {
               return ReturnTypes.DYADIC_STRING_SUM_PRECISION_NULLABLE.inferReturnType(opBinding);
             }
           }
-          return ReturnTypes.NULLABLE_SUM.inferReturnType(opBinding);
+          return null;
         }
       };
 

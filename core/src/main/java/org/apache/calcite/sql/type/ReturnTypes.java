@@ -153,6 +153,26 @@ public abstract class ReturnTypes {
   }
 
   /**
+   * Type-inference strategy for calculation between Decimal and String.
+   *
+   */
+  public static final SqlReturnTypeInference NUMERIC_STRING =
+      new SqlReturnTypeInference() {
+        public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding) {
+          RelDataType type1 = opBinding.getOperandType(0);
+          RelDataType type2 = opBinding.getOperandType(1);
+          final RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+          if (SqlTypeUtil.isNumeric(type1) && SqlTypeUtil.inStringFamily(type2)) {
+            return typeFactory.copyType(type1);
+          }
+          if (SqlTypeUtil.isNumeric(type2) && SqlTypeUtil.inStringFamily(type1)) {
+            return typeFactory.copyType(type2);
+          }
+          return null;
+        }
+  };
+  /**
    * Type-inference strategy whereby the result type of a call is the type of
    * the operand #0 (0-based).
    */
@@ -611,7 +631,7 @@ public abstract class ReturnTypes {
    */
   public static final SqlReturnTypeInference PRODUCT_NULLABLE =
       DECIMAL_PRODUCT_NULLABLE.orElse(ARG0_INTERVAL_NULLABLE)
-          .orElse(LEAST_RESTRICTIVE);
+          .orElse(LEAST_RESTRICTIVE).orElse(NUMERIC_STRING);
 
   /**
    * Type-inference strategy whereby the result type of a call is the decimal
@@ -659,7 +679,8 @@ public abstract class ReturnTypes {
    */
   public static final SqlReturnTypeInference QUOTIENT_NULLABLE =
       DECIMAL_QUOTIENT_NULLABLE.orElse(DOUBLE_QUOTIENT_NULLABLE)
-          .orElse(ARG0_INTERVAL_NULLABLE).orElse(LEAST_RESTRICTIVE);
+          .orElse(ARG0_INTERVAL_NULLABLE).orElse(LEAST_RESTRICTIVE)
+          .orElse(NUMERIC_STRING);
 
   /**
    * Type-inference strategy whereby the result type of a call is the decimal
@@ -687,7 +708,7 @@ public abstract class ReturnTypes {
    * These rules are used for addition and subtraction.
    */
   public static final SqlReturnTypeInference NULLABLE_SUM =
-      new SqlReturnTypeInferenceChain(DECIMAL_SUM_NULLABLE, LEAST_RESTRICTIVE);
+      new SqlReturnTypeInferenceChain(DECIMAL_SUM_NULLABLE, LEAST_RESTRICTIVE, NUMERIC_STRING);
 
   public static final SqlReturnTypeInference DECIMAL_MOD = opBinding -> {
     RelDataTypeFactory typeFactory = opBinding.getTypeFactory();

@@ -57,6 +57,20 @@ public abstract class OperandTypes {
   private OperandTypes() {
   }
 
+
+  private static final String CALCITE_TYPE_CAST_ENABLE = "calcite-type-cast-enable";
+
+    /**
+     * Creates a checker that allow calculation between Numeric and
+     * String for some specific operators(+-*"/") when necessary.
+     */
+  private static SqlSingleOperandTypeChecker addStringAndNumericChecker(
+      SqlSingleOperandTypeChecker typeChecker) {
+    if (System.getProperty(CALCITE_TYPE_CAST_ENABLE, "true").equals("true")) {
+      return or(typeChecker, NUMERIC_STRING, STRING_NUMERIC);
+    }
+    return typeChecker;
+  }
   /**
    * Creates a checker that passes if each operand is a member of a
    * corresponding family.
@@ -233,6 +247,9 @@ public abstract class OperandTypes {
   public static final SqlSingleOperandTypeChecker NUMERIC_NUMERIC =
       family(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC);
 
+  public static final FamilyOperandTypeChecker NUMERIC_STRING =
+          family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING);
+
   public static final SqlSingleOperandTypeChecker EXACT_NUMERIC =
       family(SqlTypeFamily.EXACT_NUMERIC);
 
@@ -244,6 +261,9 @@ public abstract class OperandTypes {
 
   public static final SqlSingleOperandTypeChecker STRING =
       family(SqlTypeFamily.STRING);
+
+  public static final FamilyOperandTypeChecker STRING_NUMERIC =
+          family(SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC);
 
   public static final FamilyOperandTypeChecker STRING_STRING =
       family(SqlTypeFamily.STRING, SqlTypeFamily.STRING);
@@ -572,24 +592,27 @@ public abstract class OperandTypes {
   // TODO: datetime+interval checking missing
   // TODO: interval+datetime checking missing
   public static final SqlSingleOperandTypeChecker PLUS_OPERATOR =
-      OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_SAME_SAME, DATETIME_INTERVAL,
-          INTERVAL_DATETIME, STRING_STRING);
+      addStringAndNumericChecker(
+          OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_SAME_SAME, DATETIME_INTERVAL,
+              INTERVAL_DATETIME, STRING_STRING));
 
   /**
    * Type-checking strategy for the "*" operator.
    */
   public static final SqlSingleOperandTypeChecker MULTIPLY_OPERATOR =
-      OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC, NUMERIC_INTERVAL);
+      addStringAndNumericChecker(
+          OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC, NUMERIC_INTERVAL));
 
   /**
    * Type-checking strategy for the "/" operator.
    */
   public static final SqlSingleOperandTypeChecker DIVISION_OPERATOR =
-      OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC);
+      addStringAndNumericChecker(OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC));
 
   public static final SqlSingleOperandTypeChecker MINUS_OPERATOR =
       // TODO:  compatibility check
-      OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_SAME_SAME, DATETIME_INTERVAL);
+      addStringAndNumericChecker(
+          OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_SAME_SAME, DATETIME_INTERVAL));
 
   public static final FamilyOperandTypeChecker MINUS_DATE_OPERATOR =
       new FamilyOperandTypeChecker(
