@@ -49,6 +49,7 @@ import java.util.function.Predicate;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import static org.apache.calcite.sql.type.ReturnTypes.NUMERIC_STRING;
 import static org.apache.calcite.util.Static.RESOURCE;
 
 import static java.util.Objects.requireNonNull;
@@ -73,6 +74,20 @@ import static java.util.Objects.requireNonNull;
 public abstract class OperandTypes {
 
   private OperandTypes() {
+  }
+
+  private static final String CALCITE_TYPE_CAST_ENABLE = "calcite-type-cast-enable";
+
+  /**
+   * Creates a checker that allow calculation between Numeric and
+   * String for some specific operators(+-*"/") when necessary.
+   */
+  private static SqlSingleOperandTypeChecker addStringAndNumericChecker(
+      SqlSingleOperandTypeChecker typeChecker) {
+    if (System.getProperty(CALCITE_TYPE_CAST_ENABLE, "true").equals("true")) {
+      return typeChecker.or(NUMERIC_STRING).or(STRING_NUMERIC);
+    }
+    return typeChecker;
   }
 
   /**
@@ -373,6 +388,9 @@ public abstract class OperandTypes {
 
   public static final SqlSingleOperandTypeChecker NUMERIC_NUMERIC =
       family(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC);
+
+  public static final FamilyOperandTypeChecker NUMERIC_STRING =
+      family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING);
 
   public static final SqlSingleOperandTypeChecker EXACT_NUMERIC =
       family(SqlTypeFamily.EXACT_NUMERIC);
@@ -1037,29 +1055,31 @@ public abstract class OperandTypes {
   // TODO: datetime+interval checking missing
   // TODO: interval+datetime checking missing
   public static final SqlSingleOperandTypeChecker PLUS_OPERATOR =
+      addStringAndNumericChecker(
       NUMERIC_NUMERIC
           .or(INTERVAL_SAME_SAME)
           .or(DATETIME_INTERVAL)
           .or(INTERVAL_DATETIME)
-          .or(STRING_STRING);
+          .or(STRING_STRING));
 
   /**
    * Type-checking strategy for the "*" operator.
    */
   public static final SqlSingleOperandTypeChecker MULTIPLY_OPERATOR =
-      NUMERIC_NUMERIC
+      addStringAndNumericChecker(NUMERIC_NUMERIC
           .or(INTERVAL_NUMERIC)
-          .or(NUMERIC_INTERVAL);
+          .or(NUMERIC_INTERVAL));
 
   /**
    * Type-checking strategy for the "/" operator.
    */
   public static final SqlSingleOperandTypeChecker DIVISION_OPERATOR =
-      NUMERIC_NUMERIC.or(INTERVAL_NUMERIC);
+      addStringAndNumericChecker(NUMERIC_NUMERIC.or(INTERVAL_NUMERIC));
 
   public static final SqlSingleOperandTypeChecker MINUS_OPERATOR =
       // TODO:  compatibility check
-      NUMERIC_NUMERIC.or(INTERVAL_SAME_SAME).or(DATETIME_INTERVAL);
+      addStringAndNumericChecker(NUMERIC_NUMERIC
+          .or(INTERVAL_SAME_SAME).or(DATETIME_INTERVAL));
 
   public static final FamilyOperandTypeChecker MINUS_DATE_OPERATOR =
       new FamilyOperandTypeChecker(
