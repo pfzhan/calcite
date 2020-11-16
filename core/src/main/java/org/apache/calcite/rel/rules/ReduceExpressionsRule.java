@@ -64,6 +64,7 @@ import org.apache.calcite.schema.impl.ScalarFunctionImpl;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlFloorFunction;
 import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.sql.type.NotConstant;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -1154,8 +1155,10 @@ public abstract class ReduceExpressionsRule<C extends ReduceExpressionsRule.Conf
 
       // Row operator itself can't be reduced to a literal, but if
       // the operands are constants, we still want to reduce those
+      // KE-19732, Calcite does not support floor(date to day/week/month/year)
       if ((callConstancy == Constancy.REDUCIBLE_CONSTANT)
-          && (call.getOperator() instanceof SqlRowOperator)) {
+          && (call.getOperator() instanceof SqlRowOperator
+              || call.getOperator() instanceof SqlFloorFunction)) {
         callConstancy = Constancy.NON_CONSTANT;
       }
 
