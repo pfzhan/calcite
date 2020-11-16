@@ -39,7 +39,7 @@ public class SqlFloorFunction extends SqlMonotonicUnaryFunction {
   //~ Constructors -----------------------------------------------------------
 
   public SqlFloorFunction(SqlKind kind) {
-    super(kind.name(), kind, ReturnTypes.ARG0_OR_EXACT_NO_SCALE, null,
+    super(kind.name(), kind, ReturnTypes.ARG0_OR_EXACT_NO_SCALE_OR_TIMESTAMP, null,
         OperandTypes.or(OperandTypes.NUMERIC_OR_INTERVAL,
             OperandTypes.sequence(
                 "'" + kind + "(<DATE> TO <TIME_UNIT>)'\n"
