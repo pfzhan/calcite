@@ -83,7 +83,7 @@ public class SqlDynamicParam extends SqlNode {
       return litmus.fail("{} != {}", this, node);
     }
     SqlDynamicParam that = (SqlDynamicParam) node;
-    if (this.index != that.index) {
+    if (this.getKind() != that.getKind()) {
       return litmus.fail("{} != {}", this, node);
     }
     return litmus.succeed();
