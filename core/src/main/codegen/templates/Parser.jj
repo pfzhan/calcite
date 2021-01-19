@@ -4574,6 +4574,20 @@ SqlNode ArrayConstructor() :
 {
     <ARRAY> { s = span(); }
     (
+        LOOKAHEAD(3)
+        // by enumeration "ARRAY(e0, e1, ..., eN)"
+        <LPAREN>
+        (
+            args = ExpressionCommaList(s, ExprContext.ACCEPT_NON_QUERY)
+        |
+            { args = SqlNodeList.EMPTY; }
+        )
+        <RPAREN>
+        {
+            return SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(
+                s.end(this), args.getList());
+        }
+    |
         LOOKAHEAD(1)
         <LPAREN>
         // by sub query "MULTISET(SELECT * FROM T)"
@@ -4585,7 +4599,7 @@ SqlNode ArrayConstructor() :
         }
     |
         // by enumeration "ARRAY[e0, e1, ..., eN]"
-        <LBRACKET> // TODO: do trigraph as well ??( ??)
+        <LBRACKET>
         (
             args = ExpressionCommaList(s, ExprContext.ACCEPT_NON_QUERY)
         |
