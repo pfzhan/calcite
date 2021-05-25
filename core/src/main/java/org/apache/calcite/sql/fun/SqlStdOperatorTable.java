@@ -1571,8 +1571,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
               OperandTypes.NILADIC,
               SqlFunctionCategory.NUMERIC) {
         @Override public SqlSyntax getSyntax() {
-                                                 return SqlSyntax.FUNCTION_ID;
-                                                                              }
+          return SqlSyntax.FUNCTION_ID;
+        }
       };
 
   /** {@code FIRST} function to be used within {@code MATCH_RECOGNIZE}. */
