@@ -1149,26 +1149,25 @@ public class SqlToRelConverter {
 
       if (query instanceof SqlNodeList) {
         SqlNodeList valueList = (SqlNodeList) query;
-        if (!containsNullLiteral(valueList)) {
-          subQuery.expr = null;
-          // keep in clause.
-          if (Boolean.parseBoolean(System.getProperty("calcite.keep-in-clause", "false"))
-                  && (leftKeys.size() <= 1 || !Boolean.parseBoolean(
-                  System.getProperty("calcite.convert-multiple-columns-in-to-or", "false")))) {
-            subQuery.expr = constructIn(bb, leftKeys, valueList, call.getOperator().kind);
-          }
-
-          // We're under the threshold, so convert to OR.
-          if (subQuery.expr == null && valueList.size() < config.getInSubQueryThreshold()) {
-            subQuery.expr =
-              convertInToOr(
-                bb,
-                leftKeys,
-                valueList,
-                (SqlInOperator) call.getOperator());
-          }
-          return;
+        // allow null lit here as we are going to process in KE
+        subQuery.expr = null;
+        // keep in clause.
+        if (Boolean.parseBoolean(System.getProperty("calcite.keep-in-clause", "false"))
+                && (leftKeys.size() <= 1 || !Boolean.parseBoolean(
+                System.getProperty("calcite.convert-multiple-columns-in-to-or", "false")))) {
+          subQuery.expr = constructIn(bb, leftKeys, valueList, call.getOperator().kind);
         }
+
+        // We're under the threshold, so convert to OR.
+        if (subQuery.expr == null && valueList.size() < config.getInSubQueryThreshold()) {
+          subQuery.expr =
+            convertInToOr(
+              bb,
+              leftKeys,
+              valueList,
+              (SqlInOperator) call.getOperator());
+        }
+        return;
 
         // Otherwise, let convertExists translate
         // values list into an inline table for the
