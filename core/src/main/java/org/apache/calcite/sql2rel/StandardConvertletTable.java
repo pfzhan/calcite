@@ -261,9 +261,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     registerOp(SqlStdOperatorTable.CEIL, floorCeilConvertlet);
 
     registerOp(SqlStdOperatorTable.TIMESTAMP_ADD, new TimestampAddConvertlet());
-
-    // KE-27654 # Disable calcite timestampdiff converter.
-    // registerOp(SqlStdOperatorTable.TIMESTAMP_DIFF, new TimestampDiffConvertlet());
+    registerOp(SqlStdOperatorTable.TIMESTAMP_DIFF, new TimestampDiffConvertlet());
 
     registerOp(SqlStdOperatorTable.INTERVAL,
         StandardConvertletTable::convertInterval);
