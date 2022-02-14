@@ -588,11 +588,6 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
               ((SqlBasicCall) call).setOperator(CONCAT);
               break;
             }
-            if (operand instanceof SqlBasicCall
-                    && ((SqlBasicCall) operand).getOperator().getName().equals("SPACE")) {
-              ((SqlBasicCall) call).setOperator(CONCAT);
-              break;
-            }
           }
         }
 
