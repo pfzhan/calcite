@@ -391,6 +391,7 @@ public class RelOptFixture {
     }
     final RelNode relAfter = after.apply(this, r4);
     final String planAfter = NL + RelOptUtil.toString(relAfter);
+    System.out.println(planAfter);
     if (unchanged) {
       final String expandedPlanAfter = diffRepos.expand("planAfter", "${planAfter}");
       if (!"${planAfter}".equals(expandedPlanAfter)) {
