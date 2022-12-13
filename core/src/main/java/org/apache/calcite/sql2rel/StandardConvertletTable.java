@@ -959,7 +959,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   public static Boolean isDateCompareWithCharacter(List<RelDataType> types) {
     if (types.size() >= 2
-            && ((types.get(0).getFamily().equals(SqlTypeFamily.DATE)
+            && (
+                (types.get(0).getFamily().equals(SqlTypeFamily.DATE)
             && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
             || (types.get(1).getFamily().equals(SqlTypeFamily.DATE)
             && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
@@ -970,7 +971,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   public static Boolean isTimestampCompareWithCharacter(List<RelDataType> types) {
     if (types.size() >= 2
-            && ((types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
+            && (
+                (types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
             && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
             || (types.get(1).getFamily().equals(SqlTypeFamily.TIMESTAMP)
             && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {

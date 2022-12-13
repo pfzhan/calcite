@@ -23,7 +23,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.ReflectiveVisitor;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /*
  * OVERRIDE POINT:
@@ -71,5 +71,3 @@ public class RelFieldTrimmer implements ReflectiveVisitor {
     return rootRel;
   }
 }
-
-// End RelFieldTrimmer.java

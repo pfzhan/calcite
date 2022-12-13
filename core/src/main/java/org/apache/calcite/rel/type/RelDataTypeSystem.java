@@ -47,7 +47,7 @@ public interface RelDataTypeSystem {
   int getDefaultPrecision(SqlTypeName typeName);
 
   /**
-   * return default scale given a sql type name
+   * return default scale given a sql type name.
    *
    * @return
    */

@@ -26,5 +26,3 @@ public abstract class AbstractRelDataTypeSystem implements RelDataTypeSystem {
     return typeName.getDefaultScale();
   }
 }
-
-// End AbstractRelDataTypeSystem.java

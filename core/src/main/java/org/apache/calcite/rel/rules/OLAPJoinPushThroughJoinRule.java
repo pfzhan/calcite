@@ -24,7 +24,6 @@ import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rex.RexBuilder;
@@ -61,7 +60,7 @@ public class OLAPJoinPushThroughJoinRule extends RelRule<OLAPJoinPushThroughJoin
 
   @Deprecated
   public OLAPJoinPushThroughJoinRule(String description, Class<? extends Join> joinClass,
-    RelBuilderFactory relBuilderFactory) {
+      RelBuilderFactory relBuilderFactory) {
     this(Config.DEFAULT.withDescription(description)
         .withRelBuilderFactory(relBuilderFactory)
         .as(Config.class)
@@ -204,18 +203,17 @@ public class OLAPJoinPushThroughJoinRule extends RelRule<OLAPJoinPushThroughJoin
     /** Defines an operand tree for the given classes. */
     default Config withOperandFor(Class<? extends Join> joinClass) {
       return withOperandSupplier(b0 ->
-          b0.operand(joinClass).inputs(b1 ->
-              b1.operand(joinClass).inputs(
-                  b11 ->
-                      b11.operand(RelNode.class).anyInputs(),
-                  b12 ->
-                      b12.operand(RelNode.class).predicate(
-                      relNode -> !(relNode instanceof TableScan)
-                  ).anyInputs()),
-                  b2 -> b2.operand(TableScan.class).anyInputs()))
+          b0.operand(joinClass).inputs(
+              b1 ->
+                  b1.operand(joinClass).inputs(
+                      b11 ->
+                          b11.operand(RelNode.class).anyInputs(),
+                      b12 ->
+                          b12.operand(RelNode.class).predicate(
+                              relNode -> !(relNode instanceof TableScan)
+                          ).anyInputs()),
+              b2 -> b2.operand(TableScan.class).anyInputs()))
           .as(Config.class);
     }
   }
 }
-
-// End OLAPJoinPushThroughJoinRule.java

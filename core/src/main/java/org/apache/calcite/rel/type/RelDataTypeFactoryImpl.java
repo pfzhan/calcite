@@ -585,7 +585,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory {
   }
 
   /**
-   * make quotient type double if it is int/int
+   * make quotient type double if it is int/int.
    * @param type1 type of operand 1
    * @param type2 type of operand 2
    * @return

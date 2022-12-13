@@ -130,10 +130,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Objects.requireNonNull;
-
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 import static org.apache.calcite.util.Static.RESOURCE;
+
+import static java.util.Objects.requireNonNull;
 
 /*
  * OVERRIDE POINT:

@@ -35,10 +35,10 @@ public interface SqlWriter {
   void writeWith(SqlCall call, int leftPrec, int rightPrec);
 
   void writeWithItem(
-    SqlCall call,
-    SqlWithItem.SqlWithItemOperator sqlWithItemOperator,
-    int leftPrec,
-    int rightPrec);
+      SqlCall call,
+      SqlWithItem.SqlWithItemOperator sqlWithItemOperator,
+      int leftPrec,
+      int rightPrec);
     //~ Enums ------------------------------------------------------------------
 
   /**
@@ -158,7 +158,7 @@ public interface SqlWriter {
     WITH,
 
     /**
-     * with items in with clause
+     * with items in with clause.
      */
     WITH_ITEM,
 

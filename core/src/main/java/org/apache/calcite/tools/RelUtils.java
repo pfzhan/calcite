@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.tools;
 
 import org.apache.calcite.rel.RelNode;
@@ -30,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * RelUtils
+ * RelUtils.
  */
 public class RelUtils {
 
@@ -77,5 +76,3 @@ public class RelUtils {
     return atomicInteger.get();
   }
 }
-
-// End RelUtils.java

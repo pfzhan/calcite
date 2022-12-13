@@ -706,7 +706,8 @@ public class SqlToRelConverter {
       for (RelFieldCollation fieldCollation : fieldCollations) {
         if (projFieldMapping.containsKey(fieldCollation.getFieldIndex())) {
           newFieldCollations.add(
-                  fieldCollation.withFieldIndex(projFieldMapping.get(fieldCollation.getFieldIndex())));
+                  fieldCollation.withFieldIndex(
+                      projFieldMapping.get(fieldCollation.getFieldIndex())));
         } else {
           newFieldCollations.add(fieldCollation);
         }
@@ -1288,7 +1289,9 @@ public class SqlToRelConverter {
         if (!valueList.accept(new SqlIdentifierFinder())
             && Boolean.parseBoolean(System.getProperty("calcite.keep-in-clause", "false"))
             && (leftKeys.size() <= 1
-            || !Boolean.parseBoolean(System.getProperty("calcite.convert-multiple-columns-in-to-or", "false")))) {
+            || !Boolean.parseBoolean(
+                System.getProperty("calcite.convert-multiple-columns-in-to-or",
+                    "false")))) {
           RexNode subQueryExpr = constructIn(bb, leftKeys, valueList, call.getOperator().kind);
           if (subQueryExpr != null) {
             subQuery.expr = subQueryExpr;

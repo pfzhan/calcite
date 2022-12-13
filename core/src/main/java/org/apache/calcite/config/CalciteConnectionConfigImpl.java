@@ -31,10 +31,8 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 
-import java.util.List;
 import java.lang.reflect.Constructor;
-import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Properties;
 
 /** Implementation of {@link CalciteConnectionConfig}. */

@@ -16,7 +16,6 @@
  */
 package org.apache.calcite.rel.rules;
 
-
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -42,13 +41,11 @@ import org.apache.calcite.util.mapping.Mapping;
 import org.apache.calcite.util.mapping.Mappings;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 
 import org.immutables.value.Value;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 
 /**
  * modified form org.apache.calcite.rel.rules.JoinPushThroughJoinRule.
@@ -97,7 +94,7 @@ public class OLAPJoinPushThroughJoinRule2 extends RelRule<OLAPJoinPushThroughJoi
     final Permutation inverseProjectPermu = projectPermu.inverse();
     //        Preconditions.checkState(relA == call.rel(3));
     //        Preconditions.checkState(relB == call.rel(4));
-    Preconditions.checkNotNull(projectPermu);
+    //    Preconditions.checkNotNull(projectPermu);
 
     //            topJoin
     //           /        \
@@ -237,21 +234,17 @@ public class OLAPJoinPushThroughJoinRule2 extends RelRule<OLAPJoinPushThroughJoi
     default Config withOperandFor(Class<? extends Join> joinClass) {
       return withOperandSupplier(b0 ->
           b0.operand(joinClass).inputs(b1 ->
-                  b1.operand(Project.class).predicate(
-                       input -> input.getPermutation() != null
-                      )
+                  b1.operand(Project.class).predicate(input -> input.getPermutation() != null)
                       .inputs(
                           b2 -> b2.operand(joinClass).inputs(
-                      b11 ->
-                          b11.operand(RelNode.class).anyInputs(),
-                      b12 ->
-                          b12.operand(RelNode.class).predicate(
-                              relNode -> !(relNode instanceof TableScan)
-                          ).anyInputs())),
+                              b11 ->
+                                  b11.operand(RelNode.class).anyInputs(),
+                              b12 ->
+                                  b12.operand(RelNode.class).predicate(
+                                      relNode -> !(relNode instanceof TableScan)
+                                  ).anyInputs())),
               b2 -> b2.operand(TableScan.class).anyInputs()))
           .as(Config.class);
     }
   }
 }
-
-// End OLAPJoinPushThroughJoinRule2.java

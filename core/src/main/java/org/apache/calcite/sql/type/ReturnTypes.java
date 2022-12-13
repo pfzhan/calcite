@@ -386,7 +386,7 @@ public abstract class ReturnTypes {
   public static final SqlReturnTypeInference TINY_INT = explicit(SqlTypeName.TINYINT);
 
   /**
-   * Type-inference strategy whereby the result type of a call is a BIGINT
+   * Type-inference strategy whereby the result type of a call is a BIGINT.
    */
   public static final SqlReturnTypeInference BIGINT =
       explicit(SqlTypeName.BIGINT);
@@ -578,7 +578,7 @@ public abstract class ReturnTypes {
   };
 
   /**
-   * return long type for all numeric type
+   * return long type for all numeric type.
    */
   public static final SqlReturnTypeInference NUMERIC_TO_LONG = opBinding -> {
     RelDataType type1 = opBinding.getOperandType(0);
@@ -595,7 +595,7 @@ public abstract class ReturnTypes {
   };
 
   /**
-   * return timestamp for date type
+   * return timestamp for date type.
    */
   public static final SqlReturnTypeInference FLOOR_DATETIME_TO_TIMESTAMP = opBinding -> {
     RelDataType type1 = opBinding.getOperandType(0);
@@ -612,7 +612,7 @@ public abstract class ReturnTypes {
 
 
   /**
-   * Type-inference strategy for floor, ceiling
+   * Type-inference strategy for floor, ceiling.
    */
   public static final SqlReturnTypeInference ARG0_OR_EXACT_NO_SCALE_OR_TIMESTAMP =
       DECIMAL_SCALE0.orElse(NUMERIC_TO_LONG).orElse(FLOOR_DATETIME_TO_TIMESTAMP).orElse(ARG0);
@@ -677,7 +677,7 @@ public abstract class ReturnTypes {
       DECIMAL_QUOTIENT.andThen(SqlTypeTransforms.TO_NULLABLE);
 
   /**
-   * Type-inference strategy for division of integers
+   * Type-inference strategy for division of integers.
    */
   public static final SqlReturnTypeInference DOUBLE_QUOTIENT = opBinding -> {
     RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
@@ -689,7 +689,7 @@ public abstract class ReturnTypes {
   /**
    * Same as {@link #DOUBLE_QUOTIENT} but returns with nullability if any of
    * the operands is nullable by using
-   * {@link org.apache.calcite.sql.type.SqlTypeTransforms#TO_NULLABLE}
+   * {@link org.apache.calcite.sql.type.SqlTypeTransforms#TO_NULLABLE}.
    */
   public static final SqlReturnTypeInference DOUBLE_QUOTIENT_NULLABLE =
           DOUBLE_QUOTIENT.andThen(SqlTypeTransforms.TO_NULLABLE);

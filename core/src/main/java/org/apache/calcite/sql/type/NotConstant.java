@@ -17,10 +17,8 @@
 package org.apache.calcite.sql.type;
 
 /**
- * Mark the function node should be treated as a constant in the rule
+ * Mark the function node should be treated as a constant in the rule.
  */
 public interface NotConstant {
 
 }
-
-// End NotConstant.java

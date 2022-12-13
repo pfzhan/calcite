@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.enumerable;
 
 import org.apache.calcite.plan.RelOptCluster;
@@ -27,7 +26,7 @@ import org.apache.calcite.rex.RexLiteral;
 import java.util.List;
 
 /**
- * EnumerableWindow cant'be created out of package, here's hack of workaround
+ * EnumerableWindow cant'be created out of package, here's hack of workaround.
  */
 public class EnumerableWindowBridge {
   private EnumerableWindowBridge(){}
@@ -37,5 +36,3 @@ public class EnumerableWindowBridge {
     return new EnumerableWindow(cluster, traits, child, constants, rowType, groups);
   }
 }
-
-// End EnumerableWindowBridge.java

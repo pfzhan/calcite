@@ -16,7 +16,6 @@
  */
 package org.apache.calcite.rel.rules;
 
-
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPredicateList;
 import org.apache.calcite.plan.RelOptRuleCall;

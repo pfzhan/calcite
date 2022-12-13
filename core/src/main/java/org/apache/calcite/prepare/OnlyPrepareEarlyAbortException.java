@@ -19,7 +19,7 @@ package org.apache.calcite.prepare;
 import org.apache.calcite.jdbc.CalcitePrepare;
 
 /**
- * define a customized RuntimeException -- OnlyPrepareEarlyAbortException
+ * define a customized RuntimeException -- OnlyPrepareEarlyAbortException.
  */
 public class OnlyPrepareEarlyAbortException extends RuntimeException {
   private CalcitePrepare.Context context;
@@ -39,5 +39,3 @@ public class OnlyPrepareEarlyAbortException extends RuntimeException {
     return preparedResult;
   }
 }
-
-// End OnlyPrepareEarlyAbortException.java

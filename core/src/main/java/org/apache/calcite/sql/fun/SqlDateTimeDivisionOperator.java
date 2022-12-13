@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.sql.fun;
 
 import org.apache.calcite.sql.SqlBinaryOperator;
@@ -45,5 +44,3 @@ public class SqlDateTimeDivisionOperator extends SqlBinaryOperator {
         OperandTypes.DIVISION_OPERATOR);
   }
 }
-
-// End SqlDateTimeDivisionOperator.java

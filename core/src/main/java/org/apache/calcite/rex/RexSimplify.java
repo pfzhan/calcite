@@ -1503,7 +1503,8 @@ public class RexSimplify {
 
     /* OVERRIDE POINT */
     //https://github.com/Kyligence/KAP/issues/7521
-    List<RexNode> termsDistinct = terms.stream().distinct().collect(Collectors.toList()); // to eliminate duplicates
+    // to eliminate duplicates
+    List<RexNode> termsDistinct = terms.stream().distinct().collect(Collectors.toList());
     switch (unknownAs) {
     case FALSE:
       return simplifyAnd2ForUnknownAsFalse(termsDistinct, notTerms, Comparable.class);
