@@ -47,7 +47,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * each {@link RelNode} needs to return a different set of fields after
  * trimming.
  *
- * <p>TODO: Change 2nd arg of the {@link #trimFields} method from BitSet to
  * Mapping. Sometimes it helps the consumer if you return the columns in a
  * particular order. For instance, it may avoid a project at the top of the
  * tree just for reordering. Could ease the transition by writing methods that

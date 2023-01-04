@@ -1166,7 +1166,7 @@ public class SqlPrettyWriter implements SqlWriter {
    * Implementation of {@link org.apache.calcite.sql.SqlWriter.Frame}.
    */
   protected class FrameImpl implements Frame {
-    final FrameType frameType;
+    public final FrameType frameType;
     final @Nullable String keyword;
     final String open;
     final String close;

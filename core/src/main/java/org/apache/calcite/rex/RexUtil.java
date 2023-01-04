@@ -1724,7 +1724,8 @@ public class RexUtil {
   }
 
   /**
-   * for example (a AND b) OR c -> (a OR c) AND (b OR c)
+   * for example:
+   * <blockquote>(a AND b) OR c</blockquote> to <blockquote>(a OR c) AND (b OR c)</blockquote>
    * maxCnfExprCount = 2    1. (a OR c)  2.(b OR c)
    */
   public static RexNode toCnf(RexBuilder rexBuilder, int maxCnfNodeCount, int maxCnfExprCount,
