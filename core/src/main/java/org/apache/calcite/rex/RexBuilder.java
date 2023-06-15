@@ -982,6 +982,7 @@ public class RexBuilder {
       }
       o = ((TimestampString) o).round(p);
       break;
+    // see https://olapio.atlassian.net/browse/KE-42046
     // Calcite 1.30 removed the precision setting for the Decimal data type,
     // restored the logic here to ensure correctness
     case DECIMAL:
@@ -1470,6 +1471,7 @@ public class RexBuilder {
   }
 
   /**
+   * see https://olapio.atlassian.net/browse/KE-42046
    * Calcite 1.30 Copy from following, Use for Kylin.
    * @see RexBuilder#makeZeroLiteral(RelDataType)
    *
@@ -1530,6 +1532,7 @@ public class RexBuilder {
   }
 
   /**
+   * see https://olapio.atlassian.net/browse/KE-42046
    * Calcite 1.30 Copy from following, Use for Kylin.
    * @see RexBuilder#makeLiteral(Object, RelDataType)
    *

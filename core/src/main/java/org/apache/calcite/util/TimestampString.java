@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
  *
  * <p>Immutable, internally represented as a string (in ISO format),
  * and can support unlimited precision (milliseconds, nanoseconds).
+ * see https://olapio.atlassian.net/browse/KE-42049
  * Calcite 1.30 changed TimestampString's compareTo method, which will cause compareTo(DateString)
  * error in following method.
  * @see RexSimplify#processRangeOld(RexBuilder, List, Map, RexNode, RexNode, Comparable, SqlKind)
@@ -122,6 +123,7 @@ public class TimestampString implements Comparable<Object> {
     return v.hashCode();
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42049
   // Calcite 1.30 changed TimestampString's compareTo method, which will cause compareTo(DateString)
   // error, we changed the behavior to the logic of Calcite 1.16
   /*@Override public int compareTo(TimestampString o) {

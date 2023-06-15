@@ -338,6 +338,7 @@ public class EnumUtils {
     return convert(operand, toType, -1);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   public static Expression convert(Expression operand, Type toType, int scale) {
     final Type fromType = operand.getType();
@@ -358,6 +359,7 @@ public class EnumUtils {
     return convert(operand, fromType, toType, -1);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   public static Expression convert(Expression operand, Type fromType,
       Type toType, int scale) {
@@ -498,6 +500,7 @@ public class EnumUtils {
       if (fromPrimitive != null) {
         // E.g. from "int" to "BigDecimal".
         // Generate "new BigDecimal(x)"
+        // see https://olapio.atlassian.net/browse/KE-42058
         // // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
         return Expressions.new_(BigDecimal.class, scale, operand);
       }

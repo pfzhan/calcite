@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
  * Date literal.
  *
  * <p>Immutable, internally represented as a string (in ISO format).
+ * see https://olapio.atlassian.net/browse/KE-42049
  * Calcite 1.30 changed DateString's compareTo method, which will cause compareTo(TimestampString)
  * error in following method.
  * @see RexSimplify#processRangeOld(RexBuilder, List, Map, RexNode, RexNode, Comparable, SqlKind)
@@ -99,6 +100,7 @@ public class DateString implements Comparable<Object> {
     return v.hashCode();
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42049
   // Calcite 1.30 changed DateString's compareTo method, which will cause compareTo(TimestampString)
   // error, we changed the behavior to the logic of Calcite 1.16
   /*@Override public int compareTo(DateString o) {

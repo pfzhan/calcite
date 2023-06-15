@@ -135,6 +135,7 @@ public class AggregateCall {
         null, RelCollations.EMPTY, groupCount, input, type, name);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42046
   // Calcite 1.30 changed makeZeroLiteral method return type
   // fix with SumCaseWhenFunctionRule and CountDistinctCaseWhenFunctionRule
   // @Deprecated // to be removed before 2.0

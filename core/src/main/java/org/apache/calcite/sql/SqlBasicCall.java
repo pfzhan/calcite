@@ -32,6 +32,7 @@ import static org.apache.calcite.linq4j.Nullness.castNonNull;
 public class SqlBasicCall extends SqlCall {
   private SqlOperator operator;
   /**
+   * see https://olapio.atlassian.net/browse/KE-42051
    * [CALCITE-4795] Calcite 1.30 change operands to operandList which is ImmutableNullableList.
    * The deep copy operation will cause the operator and operandList reference objects
    * to be inconsistent during the rewrite call, which will eventually lead to
@@ -90,6 +91,7 @@ public class SqlBasicCall extends SqlCall {
             functionQuantifier);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42051
   @Override public void setOperand(int i, @Nullable SqlNode operand) {
     operands[i] = operand;
   }

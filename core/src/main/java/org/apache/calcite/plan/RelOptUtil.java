@@ -2363,6 +2363,7 @@ public abstract class RelOptUtil {
       RexNode y,
       boolean neg) {
 
+    // see https://olapio.atlassian.net/browse/KE-42039
     /*if (neg) {
       // x is not distinct from y
       // x=y IS TRUE or ((x is null) and (y is null)),
@@ -2929,6 +2930,7 @@ public abstract class RelOptUtil {
   }
 
   /**
+   * see https://olapio.atlassian.net/browse/KE-42039
    * Calcite 1.30 copy from following method and add new parameter - shiftedMapping
    * @see RelOptUtil#classifyFilters(RelNode, List, boolean, boolean, boolean, List, List, List)
    *

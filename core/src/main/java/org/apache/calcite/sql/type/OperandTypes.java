@@ -495,6 +495,7 @@ public abstract class OperandTypes {
 
   /**
    * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
    * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
    * FYI: https://github.com/Kyligence/KAP/issues/13872
    */

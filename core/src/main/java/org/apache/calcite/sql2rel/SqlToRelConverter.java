@@ -993,6 +993,7 @@ public class SqlToRelConverter {
       List<SqlNode> orderExprList,
       @Nullable SqlNode offset,
       @Nullable SqlNode fetch) {
+    // see https://olapio.atlassian.net/browse/KE-42044
     // Calcite 1.30 will optimize Sort in subqueries, but this is not the correct behavior
     // for Kylin. The code logic is removed here to ensure correctness.
 //    if (removeSortInSubQuery(bb.top)
@@ -1237,6 +1238,7 @@ public class SqlToRelConverter {
 
   /**
    * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
    * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
    * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
@@ -1953,6 +1955,7 @@ public class SqlToRelConverter {
    * Converts "x IN (1, 2, ...)" to "x=1 OR x=2 OR ...".
    *
    * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
    * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
    * FYI: https://github.com/Kyligence/KAP/issues/13872
    *
@@ -3982,6 +3985,7 @@ public class SqlToRelConverter {
       return;
     }
 
+    // see https://olapio.atlassian.net/browse/KE-42044
     // Calcite 1.30 will optimize Sort in subqueries, but this is not the correct behavior
     // for Kylin. The code logic is removed here to ensure correctness.
 //    if (removeSortInSubQuery(bb.top)) {

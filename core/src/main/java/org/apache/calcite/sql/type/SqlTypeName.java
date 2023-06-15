@@ -127,6 +127,7 @@ public enum SqlTypeName {
    * do not flag it 'special' (internal). */
   GEOMETRY(PrecScale.NO_NO, false, ExtraSqlTypes.GEOMETRY, SqlTypeFamily.GEO),
   SARG(PrecScale.NO_NO, true, Types.OTHER, SqlTypeFamily.ANY),
+  // see https://olapio.atlassian.net/browse/KE-42023
   DOUBLE_PRECISION(PrecScale.NO_NO, false, Types.DOUBLE, SqlTypeFamily.NUMERIC,
       "DOUBLE PRECISION");
 

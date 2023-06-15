@@ -522,6 +522,7 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
       break;
     }
     if (convert == null) {
+      // see https://olapio.atlassian.net/browse/KE-42058
       // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
       if (targetType.getSqlTypeName() == SqlTypeName.DECIMAL) {
         convert = EnumUtils.convert(operand, typeFactory.getJavaClass(targetType),

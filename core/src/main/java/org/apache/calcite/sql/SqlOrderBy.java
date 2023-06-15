@@ -97,7 +97,8 @@ public class SqlOrderBy extends SqlCall {
         writer.list(SqlWriter.FrameTypeEnum.ORDER_BY_LIST, SqlWriter.COMMA,
             orderBy.orderList);
       }
-      // Calcite 1.30
+      // see https://olapio.atlassian.net/browse/KE-42031
+      // Calcite 1.30 added non-null checks for fetch and offset.
       // For org.apache.kylin.sdk.datasource.framework.conv.ConvRownumSqlWriter#doWriteRowNum
       // UT org.apache.kylin.sdk.datasource.framework.conv.SqlConverterTest#testConvRownumSqlWriter
       writer.fetchOffset(orderBy.fetch, orderBy.offset);

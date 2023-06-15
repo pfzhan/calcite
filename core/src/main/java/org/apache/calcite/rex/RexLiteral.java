@@ -1221,6 +1221,7 @@ public class RexLiteral extends RexNode {
     return visitor.visitLiteral(this, arg);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42027
   // Calcite 1.30 add type description in literal, Type needs to be removed on return to
   // avoid call exceptions
   @Override public String toString() {

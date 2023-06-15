@@ -46,6 +46,7 @@ public class JoinInfo {
   public final ImmutableIntList leftKeys;
   public final ImmutableIntList rightKeys;
   public final ImmutableList<RexNode> nonEquiConditions;
+  // see https://olapio.atlassian.net/browse/KE-42040
   // Calcite 1.30 remove EquiJoinInfo and NonEquiJoinInfo, but we need rexbuilder
   private static RexBuilder nonEquiJoinInfoBuilder = null;
 

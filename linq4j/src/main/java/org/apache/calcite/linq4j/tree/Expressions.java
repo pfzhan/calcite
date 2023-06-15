@@ -1943,6 +1943,7 @@ public abstract class Expressions {
     return new_(type, -1, arguments);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   public static NewExpression new_(Type type, int scale, Expression... arguments) {
     // Note that the last argument is not an empty list. That would cause
@@ -1961,6 +1962,7 @@ public abstract class Expressions {
     return new_(type, -1, arguments, memberDeclarations);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   public static NewExpression new_(Type type,
       int scale,

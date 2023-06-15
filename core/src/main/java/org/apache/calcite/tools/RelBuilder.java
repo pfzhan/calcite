@@ -1285,6 +1285,7 @@ public class RelBuilder {
    */
   public GroupKey groupKey(ImmutableBitSet groupSet,
       Iterable<? extends ImmutableBitSet> groupSets) {
+    // see https://olapio.atlassian.net/browse/KE-42047
     // Calcite 1.30 modified the original method logic to add a copy method,
     // which throws an NPE if the groupSets is empty, Add logic to determine if it is empty here
     return groupKey_(groupSet, groupSets == null
@@ -2010,6 +2011,7 @@ public class RelBuilder {
       return this;
     }
 
+    // see https://olapio.atlassian.net/browse/KE-42047
     // Calcite 1.30 added an optimization for expressions that are all literals, i.e., when
     // the input is the values with n rows, replace them with same tuple N times. This changes
     // Calcite's logical plan, eliminates the process of creating LogicalProject, and causes
@@ -2212,6 +2214,7 @@ public class RelBuilder {
   }
 
   /**
+   * see https://olapio.atlassian.net/browse/KE-42047
    * Calcite 1.30 Copy from following, Use for Kylin.
    * @see RelBuilder#aggregate(GroupKey, List)
    * Wrapping the original method, the new kylinPruneInputOfAggregate parameter is used to
@@ -2231,9 +2234,9 @@ public class RelBuilder {
   }
 
   /** Creates an {@link Aggregate} with multiple calls.
-   * Calcite 1.30 changed makeZeroLiteral method return type
-   * fix with SumCaseWhenFunctionRule and CountDistinctCaseWhenFunctionRule.
-   *
+   * see https://olapio.atlassian.net/browse/KE-42047
+   * Calcite 1.30 Add new parameter kylinPruneInputOfAggregate to control some behaviors,
+   * that do not need to prune the agg, otherwise it will cause the Kylin matching model to fail.
    * Wrapping the original method, the new kylinPruneInputOfAggregate parameter is used to
    * control some behaviors that do not need to prune the agg, otherwise it will cause
    * the Kylin matching model to fail.
@@ -2243,6 +2246,7 @@ public class RelBuilder {
   }
 
   /**
+   * see https://olapio.atlassian.net/browse/KE-42047
    * Calcite 1.30 Copy from following, Use for Kylin.
    * @see RelBuilder#aggregate(GroupKey, Iterable)
    * Add new parameter kylinPruneInputOfAggregate to control some behaviors, that do not need
@@ -2341,6 +2345,7 @@ public class RelBuilder {
       // Some parts of the system can't handle rows with zero fields, so
       // pretend that one field is used.
 
+      // see https://olapio.atlassian.net/browse/KE-42047
       // Calcite 1.30 replaces the input RelNode with the current RelNode when the fields in
       // the aggregate is 0, considering that there may be subsequent processes that cannot handle
       // this situation, and this causes the matching model in Kylin to behave incorrectly.

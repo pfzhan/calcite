@@ -42,6 +42,7 @@ public class NewExpression extends Expression {
     this(type, -1, arguments, memberDeclarations);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   public NewExpression(Type type, int scale, List<Expression> arguments,
       @Nullable List<MemberDeclaration> memberDeclarations) {
@@ -68,6 +69,7 @@ public class NewExpression extends Expression {
     return visitor.visit(this);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   @Override void accept(ExpressionWriter writer, int lprec, int rprec) {
     if (scale == -1) {

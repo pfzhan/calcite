@@ -534,6 +534,7 @@ public class RexSimplify {
       }
     }
 
+    // see https://olapio.atlassian.net/browse/KE-42042
     // Calcite 1.30 Simplify comparisons against boolean literals.
     // However, this causes the query to not match the expectation when converting
     // Calcite Logical Plan to Spark Logical Plan, comment this optimization code
@@ -1131,6 +1132,7 @@ public class RexSimplify {
   }
 
   /**
+   * see https://olapio.atlassian.net/browse/KE-42042
    * Calcite 1.30 changed simplifyCase logic, The optimization, which can be viewed in detail by
    * clicking on the link below, causes the Kylin matching model to be anomalous and therefore
    * reverts the logic to the previous logic.
@@ -1722,6 +1724,7 @@ public class RexSimplify {
     return simplifyAnd2ForUnknownAsFalse(terms, notTerms, Comparable.class);
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42042
   // Calcite 1.30 changed simplifyAnd2ForUnknownAsFalse behavior, which causes KE
   // pruning partitions to behave inconsistently, revert the logic here to version 1.16
   /*private <C extends Comparable<C>> RexNode simplifyAnd2ForUnknownAsFalse(
@@ -2902,6 +2905,7 @@ public class RexSimplify {
     return null;
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42042
   // Calcite 1.30 changed simplifyAnd2ForUnknownAsFalse behavior, which causes KE
   // pruning partitions to behave inconsistently, revert the logic here to version 1.16
   private static <C extends Comparable<C>> RexNode processRangeOld(
@@ -3488,6 +3492,7 @@ public class RexSimplify {
 
     /** Returns whether it is worth to fix and convert to {@code SEARCH} calls. */
     boolean needToFix() {
+      // see https://olapio.atlassian.net/browse/KE-42042
       // Calcite 1.30 add SEARCH call, But KE needs to be consistent with the behavior,
       // so cancel this function conversion
       return false;

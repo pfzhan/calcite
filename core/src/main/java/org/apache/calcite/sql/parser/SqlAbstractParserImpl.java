@@ -415,6 +415,7 @@ public abstract class SqlAbstractParserImpl {
       SqlLiteral functionQualifier,
       SqlNode[] operands) {
 
+    // see https://olapio.atlassian.net/browse/KE-42061
     // Calcite 1.30 removed lookupOperatorOverloads here, we restore the code
     SqlOperator fun = null;
     // First, try a half-hearted resolution as a builtin function.

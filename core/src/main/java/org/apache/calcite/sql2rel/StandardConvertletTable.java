@@ -998,6 +998,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   /**
    * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
    * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
    * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
@@ -1051,6 +1052,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     for (SqlNode node : nodes) {
       exprs.add(cx.convertExpression(node));
     }
+    // see https://olapio.atlassian.net/browse/KE-42045
     // Calcite 1.30 Ensures expression is interpreted as a specified type. The returned
     // expression may be wrapped with a cast. Comment out this code, as it may convert
     // types to types that Spark cannot resolve.
@@ -1086,6 +1088,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   /**
    * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
    * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
    * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
@@ -1150,6 +1153,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   /**
    * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
    * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
    * FYI: https://github.com/Kyligence/KAP/issues/13872
    */

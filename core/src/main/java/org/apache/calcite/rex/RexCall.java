@@ -83,6 +83,7 @@ public class RexCall extends RexNode {
     this.nodeCount = RexUtil.nodeCount(1, this.operands);
     assert operator.getKind() != null : operator;
     assert operator.validRexOperands(operands.size(), Litmus.THROW) : this;
+    // see https://olapio.atlassian.net/browse/KE-42028
     // Calcite 1.30 add more check about operator.kind, This can trigger KE exceptions in some cases
     // assert operator.kind != SqlKind.IN || this instanceof RexSubQuery;
   }

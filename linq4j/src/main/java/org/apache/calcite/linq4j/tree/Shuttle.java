@@ -257,6 +257,7 @@ public class Shuttle {
     return this;
   }
 
+  // see https://olapio.atlassian.net/browse/KE-42058
   // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   public Expression visit(NewExpression newExpression,
       List<Expression> arguments, @Nullable List<MemberDeclaration> memberDeclarations) {
