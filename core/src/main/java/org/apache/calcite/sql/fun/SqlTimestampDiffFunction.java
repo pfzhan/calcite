@@ -71,8 +71,8 @@ class SqlTimestampDiffFunction extends SqlFunction {
   SqlTimestampDiffFunction() {
     super("TIMESTAMPDIFF", SqlKind.TIMESTAMP_DIFF,
         RETURN_TYPE_INFERENCE, null,
-        OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.DATETIME,
-            SqlTypeFamily.DATETIME),
+        OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.ANY,
+            SqlTypeFamily.ANY),
         SqlFunctionCategory.TIMEDATE);
   }
 }
