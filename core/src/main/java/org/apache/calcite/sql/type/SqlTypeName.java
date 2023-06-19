@@ -126,10 +126,7 @@ public enum SqlTypeName {
   /** Spatial type. Though not standard, it is common to several DBs, so we
    * do not flag it 'special' (internal). */
   GEOMETRY(PrecScale.NO_NO, false, ExtraSqlTypes.GEOMETRY, SqlTypeFamily.GEO),
-  SARG(PrecScale.NO_NO, true, Types.OTHER, SqlTypeFamily.ANY),
-  // see https://olapio.atlassian.net/browse/KE-42023
-  DOUBLE_PRECISION(PrecScale.NO_NO, false, Types.DOUBLE, SqlTypeFamily.NUMERIC,
-      "DOUBLE PRECISION");
+  SARG(PrecScale.NO_NO, true, Types.OTHER, SqlTypeFamily.ANY);
 
   public static final int MAX_DATETIME_PRECISION = 3;
 
@@ -161,7 +158,7 @@ public enum SqlTypeName {
           INTERVAL_DAY_SECOND, INTERVAL_HOUR, INTERVAL_HOUR_MINUTE,
           INTERVAL_HOUR_SECOND, INTERVAL_MINUTE, INTERVAL_MINUTE_SECOND,
           INTERVAL_SECOND, TIME_WITH_LOCAL_TIME_ZONE, TIMESTAMP_WITH_LOCAL_TIME_ZONE,
-          FLOAT, MULTISET, DISTINCT, STRUCTURED, ROW, CURSOR, COLUMN_LIST, DOUBLE_PRECISION);
+          FLOAT, MULTISET, DISTINCT, STRUCTURED, ROW, CURSOR, COLUMN_LIST);
 
   public static final List<SqlTypeName> BOOLEAN_TYPES =
       ImmutableList.of(BOOLEAN);
@@ -231,19 +228,19 @@ public enum SqlTypeName {
           .put(Types.CHAR, CHAR)
           .put(Types.VARCHAR, VARCHAR)
 
-              // TODO: provide real support for these eventually
+          // TODO: provide real support for these eventually
           .put(ExtraSqlTypes.NCHAR, CHAR)
           .put(ExtraSqlTypes.NVARCHAR, VARCHAR)
 
-              // TODO: additional types not yet supported. See ExtraSqlTypes.
-              // .put(Types.LONGVARCHAR, Longvarchar)
-              // .put(Types.CLOB, Clob)
-              // .put(Types.LONGVARBINARY, Longvarbinary)
-              // .put(Types.BLOB, Blob)
-              // .put(Types.LONGNVARCHAR, Longnvarchar)
-              // .put(Types.NCLOB, Nclob)
-              // .put(Types.ROWID, Rowid)
-              // .put(Types.SQLXML, Sqlxml)
+          // TODO: additional types not yet supported. See ExtraSqlTypes.
+          // .put(Types.LONGVARCHAR, Longvarchar)
+          // .put(Types.CLOB, Clob)
+          // .put(Types.LONGVARBINARY, Longvarbinary)
+          // .put(Types.BLOB, Blob)
+          // .put(Types.LONGNVARCHAR, Longnvarchar)
+          // .put(Types.NCLOB, Nclob)
+          // .put(Types.ROWID, Rowid)
+          // .put(Types.SQLXML, Sqlxml)
 
           .put(Types.BINARY, BINARY)
           .put(Types.VARBINARY, VARBINARY)
@@ -271,20 +268,12 @@ public enum SqlTypeName {
   private final int jdbcOrdinal;
   private final @Nullable SqlTypeFamily family;
 
-  private final @Nullable String customTypeName;
-
   SqlTypeName(int signatures, boolean special, int jdbcType,
       @Nullable SqlTypeFamily family) {
-    this(signatures, special, jdbcType, family, null);
-  }
-
-  SqlTypeName(int signatures, boolean special, int jdbcType,
-      @Nullable SqlTypeFamily family, @Nullable String customTypeName) {
     this.signatures = signatures;
     this.special = special;
     this.jdbcOrdinal = jdbcType;
     this.family = family;
-    this.customTypeName = customTypeName;
   }
 
   /**
@@ -962,9 +951,6 @@ public enum SqlTypeName {
 
   /** Returns the name of this type. */
   public String getName() {
-    if (customTypeName != null) {
-      return customTypeName;
-    }
     return toString();
   }
 
