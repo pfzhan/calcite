@@ -1470,21 +1470,6 @@ public class RexBuilder {
     return makeLiteral(zeroValue(type), type);
   }
 
-  /**
-   * see https://olapio.atlassian.net/browse/KE-42046
-   * Calcite 1.30 Copy from following, Use for Kylin.
-   * @see RexBuilder#makeZeroLiteral(RelDataType)
-   *
-   * Calcite 1.30 changed makeZeroLiteral method return type
-   * fix with SumCaseWhenFunctionRule and CountDistinctCaseWhenFunctionRule.
-   *
-   * @param type      Type
-   * @return Simple literal
-   */
-  public RexNode kylinMakeZeroLiteral(RelDataType type) {
-    return kylinMakeLiteral(zeroValue(type), type);
-  }
-
   private static Comparable zeroValue(RelDataType type) {
     switch (type.getSqlTypeName()) {
     case CHAR:
@@ -1529,22 +1514,6 @@ public class RexBuilder {
    */
   public RexLiteral makeLiteral(@Nullable Object value, RelDataType type) {
     return (RexLiteral) makeLiteral(value, type, false, false);
-  }
-
-  /**
-   * see https://olapio.atlassian.net/browse/KE-42046
-   * Calcite 1.30 Copy from following, Use for Kylin.
-   * @see RexBuilder#makeLiteral(Object, RelDataType)
-   *
-   * Calcite 1.30 changed makeZeroLiteral method return type
-   * fix with SumCaseWhenFunctionRule and CountDistinctCaseWhenFunctionRule.
-   *
-   * @param value     Value
-   * @param type      Type
-   * @return Simple literal
-   */
-  public RexNode kylinMakeLiteral(@Nullable Object value, RelDataType type) {
-    return makeLiteral(value, type, true, false);
   }
 
   /**
