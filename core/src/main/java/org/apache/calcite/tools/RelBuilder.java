@@ -1285,11 +1285,7 @@ public class RelBuilder {
    */
   public GroupKey groupKey(ImmutableBitSet groupSet,
       Iterable<? extends ImmutableBitSet> groupSets) {
-    // see https://olapio.atlassian.net/browse/KE-42047
-    // Calcite 1.30 modified the original method logic to add a copy method,
-    // which throws an NPE if the groupSets is empty, Add logic to determine if it is empty here
-    return groupKey_(groupSet, groupSets == null
-        ? ImmutableList.of(groupSet) : ImmutableList.copyOf(groupSets));
+    return groupKey_(groupSet, ImmutableList.copyOf(groupSets));
   }
 
   // CHECKSTYLE: IGNORE 1
