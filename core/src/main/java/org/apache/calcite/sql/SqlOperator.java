@@ -33,6 +33,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
+import org.apache.calcite.util.ImmutableNullableList;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Util;
 
@@ -274,7 +275,7 @@ public abstract class SqlOperator {
       SqlParserPos pos,
       @Nullable SqlNode... operands) {
     pos = pos.plusAll(operands);
-    return new SqlBasicCall(this, operands, pos,
+    return new SqlBasicCall(this, ImmutableNullableList.copyOf(operands), pos,
         functionQualifier);
   }
 
@@ -1083,4 +1084,11 @@ public abstract class SqlOperator {
   public boolean argumentMustBeScalar(int ordinal) {
     return true;
   }
+
+  /**
+   * see https://olapio.atlassian.net/browse/KE-42051
+   * When SqlBasicCall modifies operandList with deep copy, it also should be replaced with
+   * the latest operandList to ensure reference consistency.
+   */
+  public void updateOperandsIfNeed(List<@Nullable SqlNode> operandList) {}
 }

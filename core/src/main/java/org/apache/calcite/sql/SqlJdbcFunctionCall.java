@@ -30,6 +30,7 @@ import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.calcite.util.Static.RESOURCE;
@@ -467,6 +468,11 @@ public class SqlJdbcFunctionCall extends SqlFunction {
   @Override public String getAllowedSignatures(String name) {
     return requireNonNull(lookupMakeCallObj, "lookupMakeCallObj")
         .getOperator().getAllowedSignatures(name);
+  }
+
+  // see https://olapio.atlassian.net/browse/KE-42051
+  @Override public void updateOperandsIfNeed(List<@Nullable SqlNode> operandList) {
+    thisOperands = operandList.toArray(SqlNode.EMPTY_ARRAY);
   }
 
   @Override public RelDataType deriveType(

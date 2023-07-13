@@ -21,6 +21,7 @@ import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
+import org.apache.calcite.util.ImmutableNullableList;
 
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
@@ -47,7 +48,7 @@ public class SqlNullTreatmentOperator extends SqlSpecialOperator {
   @Override public SqlCall createCall(@Nullable SqlLiteral functionQualifier,
       SqlParserPos pos, @Nullable SqlNode... operands) {
     // As super.createCall, but don't union the positions
-    return new SqlBasicCall(this, operands, pos,
+    return new SqlBasicCall(this, ImmutableNullableList.copyOf(operands), pos,
         functionQualifier);
   }
 
