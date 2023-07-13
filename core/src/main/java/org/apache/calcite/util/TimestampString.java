@@ -17,10 +17,6 @@
 package org.apache.calcite.util;
 
 import org.apache.calcite.avatica.util.DateTimeUtils;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexSimplify;
-import org.apache.calcite.sql.SqlKind;
 
 import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 import org.apache.kylin.guava30.shaded.common.base.Strings;
@@ -28,8 +24,6 @@ import org.apache.kylin.guava30.shaded.common.base.Strings;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -37,14 +31,8 @@ import java.util.regex.Pattern;
  *
  * <p>Immutable, internally represented as a string (in ISO format),
  * and can support unlimited precision (milliseconds, nanoseconds).
- * see https://olapio.atlassian.net/browse/KE-42049
- * Calcite 1.30 changed TimestampString's compareTo method, which will cause compareTo(DateString)
- * error in following method.
- * @see RexSimplify#processRangeOld(RexBuilder, List, Map, RexNode, RexNode, Comparable, SqlKind)
  */
-
-//public class TimestampString implements Comparable<TimestampString> {
-public class TimestampString implements Comparable<Object> {
+public class TimestampString implements Comparable<TimestampString> {
   private static final Pattern PATTERN =
       Pattern.compile("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
           + " "
@@ -123,22 +111,8 @@ public class TimestampString implements Comparable<Object> {
     return v.hashCode();
   }
 
-  // see https://olapio.atlassian.net/browse/KE-42049
-  // Calcite 1.30 changed TimestampString's compareTo method, which will cause compareTo(DateString)
-  // error, we changed the behavior to the logic of Calcite 1.16
-  /*@Override public int compareTo(TimestampString o) {
+  @Override public int compareTo(TimestampString o) {
     return v.compareTo(o.v);
-  }*/
-  @Override public int compareTo(Object o) {
-    if (o instanceof TimestampString) {
-      return v.compareTo(((TimestampString) o).v);
-    }
-
-    if (o instanceof DateString) {
-      return Long.compare(this.getMillisSinceEpoch(), ((DateString) o).getMillisSinceEpoch());
-    }
-
-    return v.compareTo(o.toString());
   }
 
   /** Creates a TimestampString from a Calendar. */
