@@ -203,15 +203,8 @@ public class SqlIdentifier extends SqlNode {
    */
   public SqlParserPos getComponentParserPosition(int i) {
     assert (i >= 0) && (i < names.size());
-    // see https://olapio.atlassian.net/browse/KE-42069
-    // Calcite 1.30 add unparsedAsFunc in SqlUtil.unparseSqlIdentifierSyntax method
-    // Kylin may have changed the alias of the column, causing the index bound exception
-    if (componentPositions == null) {
-      return getParserPosition();
-    } else if (i == componentPositions.size()) {
-      return componentPositions.get(i - 1);
-    }
-    return componentPositions.get(i);
+    return (componentPositions == null) ? getParserPosition()
+        : componentPositions.get(i);
   }
 
   /**
