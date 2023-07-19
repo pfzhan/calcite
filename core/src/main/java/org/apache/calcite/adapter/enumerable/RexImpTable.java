@@ -3804,10 +3804,20 @@ public class RexImpTable {
           returnType == callValue.getType()
               || op instanceof SqlUserDefinedTableMacro
               || op instanceof SqlUserDefinedTableFunction;
-      final Expression convertedCallValue =
+      Expression convertedCallValue =
           noConvert
               ? callValue
               : EnumUtils.convert(callValue, returnType);
+      // 1.0 / 3.0 need adjust decimal type
+      // big-query.iq: for example, cast(9.999999999999999999e75 as DECIMAL(38, 19))
+      // decimal overflow skip adjusting decimal type
+      if (returnType == BigDecimal.class
+          && call.getType().getPrecision() != call.getType().getScale()
+          && call.getType().getScale() > 0) {
+        convertedCallValue =
+            RexToLixTranslator.adjustDecimalScale(call.getType().getScale(),
+                convertedCallValue);
+      }
 
       final Expression valueExpression =
           Expressions.condition(condition,
