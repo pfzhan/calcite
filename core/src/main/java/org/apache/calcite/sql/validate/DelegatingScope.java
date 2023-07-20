@@ -573,20 +573,17 @@ public abstract class DelegatingScope implements SqlValidatorScope {
           }
         }
       }
+    } else { // check if there are fields with the same name
+      int count = 0;
+      for (RelDataTypeField f : rowType.getFieldList()) {
+        if (Util.matches(nameMatcher.isCaseSensitive(), f.getName(), columnName)) {
+          count++;
+        }
+      }
+      if (count > 1) {
+        return true;
+      }
     }
-    // see https://olapio.atlassian.net/browse/KE-42022
-    // Calcite 1.30 has added more check on the same name, which will result in KE-related UT errors
-    //    else { // check if there are fields with the same name
-    //      int count = 0;
-    //      for (RelDataTypeField f : rowType.getFieldList()) {
-    //        if (Util.matches(nameMatcher.isCaseSensitive(), f.getName(), columnName)) {
-    //          count++;
-    //        }
-    //      }
-    //      if (count > 1) {
-    //        return true;
-    //      }
-    //    }
     return false;
   }
 
