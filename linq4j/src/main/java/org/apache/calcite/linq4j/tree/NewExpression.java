@@ -31,7 +31,6 @@ import java.util.Objects;
 public class NewExpression extends Expression {
   @SuppressWarnings("HidingField")
   public final Type type;
-  public final int scale;
   public final List<Expression> arguments;
   public final @Nullable List<MemberDeclaration> memberDeclarations;
   /** Cached hash code for the expression. */
@@ -39,16 +38,8 @@ public class NewExpression extends Expression {
 
   public NewExpression(Type type, List<Expression> arguments,
       @Nullable List<MemberDeclaration> memberDeclarations) {
-    this(type, -1, arguments, memberDeclarations);
-  }
-
-  // see https://olapio.atlassian.net/browse/KE-42058
-  // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
-  public NewExpression(Type type, int scale, List<Expression> arguments,
-      @Nullable List<MemberDeclaration> memberDeclarations) {
     super(ExpressionType.New, type);
     this.type = type;
-    this.scale = scale;
     this.arguments = arguments;
     this.memberDeclarations = memberDeclarations;
   }
@@ -69,16 +60,8 @@ public class NewExpression extends Expression {
     return visitor.visit(this);
   }
 
-  // see https://olapio.atlassian.net/browse/KE-42058
-  // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
   @Override void accept(ExpressionWriter writer, int lprec, int rprec) {
-    if (scale == -1) {
-      writer.append("new ").append(type).list("(\n", ",\n", ")", arguments);
-    } else {
-      writer.append("new ").append(type)
-          .list("(\n", ",\n", ")", arguments)
-          .append(".setScale(").append(scale).append(", java.math.RoundingMode.HALF_UP)");
-    }
+    writer.append("new ").append(type).list("(\n", ",\n", ")", arguments);
     if (memberDeclarations != null) {
       writer.list("{\n", "", "}", memberDeclarations);
     }

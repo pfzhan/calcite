@@ -28,6 +28,7 @@ import org.apache.calcite.linq4j.tree.CatchBlock;
 import org.apache.calcite.linq4j.tree.ConstantExpression;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.linq4j.tree.MethodCallExpression;
 import org.apache.calcite.linq4j.tree.ParameterExpression;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.linq4j.tree.Statement;
@@ -57,7 +58,6 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlWindowTableFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.util.BuiltInMethod;
@@ -76,6 +76,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -522,14 +523,7 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
       break;
     }
     if (convert == null) {
-      // see https://olapio.atlassian.net/browse/KE-42058
-      // Calcite 1.30 don't keep the precision of BigDecimal, This will cause calculate error
-      if (targetType.getSqlTypeName() == SqlTypeName.DECIMAL) {
-        convert = EnumUtils.convert(operand, typeFactory.getJavaClass(targetType),
-            targetType.getScale());
-      } else {
-        convert = EnumUtils.convert(operand, typeFactory.getJavaClass(targetType));
-      }
+      convert = EnumUtils.convert(operand, typeFactory.getJavaClass(targetType));
     }
     // Going from anything to CHAR(n) or VARCHAR(n), make sure value is no
     // longer than n.
@@ -611,6 +605,12 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
         break;
       default:
         break;
+      }
+      break;
+    // see https://olapio.atlassian.net/browse/KE-42058
+    case DECIMAL:
+      if (targetType.getScale() != sourceType.getScale()) {
+        convert = adjustDecimalScale(targetType.getScale(), convert);
       }
       break;
     default:
@@ -770,10 +770,15 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
         return Expressions.constant(bd, javaClass);
       }
       assert javaClass == BigDecimal.class;
-      return Expressions.new_(BigDecimal.class,
+      // see https://olapio.atlassian.net/browse/KE-42058
+      Expression expression = Expressions.new_(BigDecimal.class,
           Expressions.constant(
               requireNonNull(bd,
                   () -> "value for " + literal).toString()));
+      if (type.getScale() != bd.scale()) {
+        expression = adjustDecimalScale(type.getScale(), expression);
+      }
+      return expression;
     case DATE:
     case TIME:
     case TIME_WITH_LOCAL_TIME_ZONE:
@@ -830,6 +835,12 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
       }
     }
     return Expressions.constant(value2, javaClass);
+  }
+
+  private static MethodCallExpression adjustDecimalScale(int scale,
+      Expression expression) {
+    return Expressions.call(expression, BuiltInMethod.BIG_DECIMAL_SET_SCALE.method,
+        Expressions.constant(scale), Expressions.constant(RoundingMode.HALF_UP));
   }
 
   public List<Expression> translateList(
