@@ -1054,9 +1054,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     }
     // see https://olapio.atlassian.net/browse/KE-42045
     // Calcite 1.30 Ensures expression is interpreted as a specified type. The returned
-    // expression may be wrapped with a cast. Comment out this code, as it may convert
-    // types to types that Spark cannot resolve.
-    /*if (call != null) {
+    // expression may be wrapped with a cast.
+    if (call != null) {
       final List<RelDataType> operandTypes =
           cx.getValidator().getValidatedOperandTypes(call);
       if (operandTypes != null) {
@@ -1065,7 +1064,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
         Pair.forEach(oldExprs, operandTypes, (expr, type) ->
             exprs.add(cx.getRexBuilder().ensureType(type, expr, true)));
       }
-    }*/
+    }
     if (exprs.size() > 1) {
       RelDataType type =
           consistentType(cx, consistency, RexUtil.types(exprs));
