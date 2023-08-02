@@ -1957,11 +1957,7 @@ public class RexImpTable {
 
     @Override Expression implementSafe(final RexToLixTranslator translator,
         final RexCall call, final List<Expression> argValueList) {
-      // see https://olapio.atlassian.net/browse/KE-42050
-      // Calcite 1.30 adds a strict parameter passed to the reflection call to control whether
-      // multiple character operations are allowed, but this is not the correct behavior for Kylin.
-      // The code logic is removed here to ensure correctness.
-//      final boolean strict = !translator.conformance.allowExtendedTrim();
+      final boolean strict = !translator.conformance.allowExtendedTrim();
       final Object value = translator.getLiteralValue(argValueList.get(0));
       SqlTrimFunction.Flag flag = (SqlTrimFunction.Flag) value;
       return Expressions.call(
@@ -1973,9 +1969,8 @@ public class RexImpTable {
               flag == SqlTrimFunction.Flag.BOTH
               || flag == SqlTrimFunction.Flag.TRAILING),
           argValueList.get(1),
-//          argValueList.get(2),
-//          Expressions.constant(strict));
-          argValueList.get(2));
+          argValueList.get(2),
+          Expressions.constant(strict));
     }
   }
 
