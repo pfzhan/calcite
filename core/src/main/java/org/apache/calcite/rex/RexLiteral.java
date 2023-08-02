@@ -1220,11 +1220,4 @@ public class RexLiteral extends RexNode {
   @Override public <R, P> R accept(RexBiVisitor<R, P> visitor, P arg) {
     return visitor.visitLiteral(this, arg);
   }
-
-  // see https://olapio.atlassian.net/browse/KE-42027
-  // Calcite 1.30 add type description in literal, Type needs to be removed on return to
-  // avoid call exceptions
-  @Override public String toString() {
-    return computeDigest(RexDigestIncludeType.NO_TYPE);
-  }
 }
