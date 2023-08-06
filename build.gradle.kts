@@ -42,10 +42,10 @@ plugins {
     id("org.nosphere.apache.rat")
     id("com.github.spotbugs")
     id("de.thetaphi.forbiddenapis") apply false
-    id("net.ltgt.errorprone") apply false
+    id("net.ltgt.errorprone")
     id("com.github.vlsi.jandex") apply false
     id("org.owasp.dependencycheck")
-    id("com.github.johnrengelman.shadow") apply false
+    id("com.github.johnrengelman.shadow") version "7.1.0"
     // IDE configuration
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.vlsi.ide")
@@ -316,10 +316,12 @@ allprojects {
         apply(plugin = "java-library")
     }
 
+    val externalVersion = "5.0.0"
     plugins.withId("java-library") {
         dependencies {
             "annotationProcessor"(platform(project(":bom")))
             "implementation"(platform(project(":bom")))
+            "implementation"("org.apache.kylin:kylin-external-guava30:$externalVersion")
             "testAnnotationProcessor"(platform(project(":bom")))
         }
     }
@@ -635,6 +637,10 @@ allprojects {
                         "DoNotCallSuggester",
                         "StringSplitter"
                     )
+                    options.compilerArgs.add("-XDcompilePolicy=simple")
+                    options.compilerArgs.add("-Xplugin:ErrorProne")
+                    options.compilerArgs.add("-AErrorProne:Checks=RenameGuavaPackages")
+                    options.compilerArgs.add("-AReplaceGuavaPackages=com.google.common=org.apache.kylin.external.guava")
                 }
             }
         }
