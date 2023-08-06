@@ -1084,4 +1084,11 @@ public abstract class SqlOperator {
   public boolean argumentMustBeScalar(int ordinal) {
     return true;
   }
+
+  /**
+   * see https://olapio.atlassian.net/browse/KE-42051
+   * When SqlBasicCall modifies operandList with deep copy, it also should be replaced with
+   * the latest operandList to ensure reference consistency.
+   */
+  public void updateOperandsIfNeed(List<@Nullable SqlNode> operandList) {}
 }

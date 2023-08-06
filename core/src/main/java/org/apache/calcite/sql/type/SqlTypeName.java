@@ -228,19 +228,19 @@ public enum SqlTypeName {
           .put(Types.CHAR, CHAR)
           .put(Types.VARCHAR, VARCHAR)
 
-              // TODO: provide real support for these eventually
+          // TODO: provide real support for these eventually
           .put(ExtraSqlTypes.NCHAR, CHAR)
           .put(ExtraSqlTypes.NVARCHAR, VARCHAR)
 
-              // TODO: additional types not yet supported. See ExtraSqlTypes.
-              // .put(Types.LONGVARCHAR, Longvarchar)
-              // .put(Types.CLOB, Clob)
-              // .put(Types.LONGVARBINARY, Longvarbinary)
-              // .put(Types.BLOB, Blob)
-              // .put(Types.LONGNVARCHAR, Longnvarchar)
-              // .put(Types.NCLOB, Nclob)
-              // .put(Types.ROWID, Rowid)
-              // .put(Types.SQLXML, Sqlxml)
+          // TODO: additional types not yet supported. See ExtraSqlTypes.
+          // .put(Types.LONGVARCHAR, Longvarchar)
+          // .put(Types.CLOB, Clob)
+          // .put(Types.LONGVARBINARY, Longvarbinary)
+          // .put(Types.BLOB, Blob)
+          // .put(Types.LONGNVARCHAR, Longnvarchar)
+          // .put(Types.NCLOB, Nclob)
+          // .put(Types.ROWID, Rowid)
+          // .put(Types.SQLXML, Sqlxml)
 
           .put(Types.BINARY, BINARY)
           .put(Types.VARBINARY, VARBINARY)

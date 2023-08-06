@@ -330,7 +330,20 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
 
   /**
    * Logical equals operator, '<code>=</code>'.
+   * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
+   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
+   * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
+  /*public static final SqlBinaryOperator EQUALS =
+      new SqlBinaryOperator(
+          "=",
+          SqlKind.EQUALS,
+          30,
+          true,
+          ReturnTypes.BOOLEAN_NULLABLE,
+          InferTypes.FIRST_KNOWN,
+          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);*/
   public static final SqlBinaryOperator EQUALS =
       new SqlBinaryOperator(
           "=",
@@ -339,7 +352,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           true,
           ReturnTypes.BOOLEAN_NULLABLE,
           InferTypes.FIRST_KNOWN,
-          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+          OperandTypes.COMPARABLE_NO_CONVERT_TO_VARYING);
 
   /**
    * Logical greater-than operator, '<code>&gt;</code>'.
@@ -530,7 +543,20 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
 
   /**
    * Logical not-equals operator, '<code>&lt;&gt;</code>'.
+   * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
+   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
+   * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
+  /*public static final SqlBinaryOperator NOT_EQUALS =
+      new SqlBinaryOperator(
+          "<>",
+          SqlKind.NOT_EQUALS,
+          30,
+          true,
+          ReturnTypes.BOOLEAN_NULLABLE,
+          InferTypes.FIRST_KNOWN,
+          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);*/
   public static final SqlBinaryOperator NOT_EQUALS =
       new SqlBinaryOperator(
           "<>",
@@ -539,7 +565,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           true,
           ReturnTypes.BOOLEAN_NULLABLE,
           InferTypes.FIRST_KNOWN,
-          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+          OperandTypes.COMPARABLE_NO_CONVERT_TO_VARYING);
 
   /**
    * Logical <code>OR</code> operator.

@@ -2908,6 +2908,11 @@ public class RexSimplify {
 
     /** Returns whether it is worth to fix and convert to {@code SEARCH} calls. */
     boolean needToFix() {
+      // see https://olapio.atlassian.net/browse/KE-42028
+      // Calcite 1.30 add SEARCH call, But KE needs to be consistent with the behavior,
+      // so cancel this function conversion
+      return false;
+
       // Fix and converts to SEARCH if:
       // 1. A Sarg has complexity greater than 1;
       // 2. The terms are reduced as simpler Sarg points;
@@ -2916,10 +2921,10 @@ public class RexSimplify {
       // Ignore 'negate' just to be compatible with previous versions of this
       // method. "build().complexity()" would be a better estimate, if we could
       // switch to it breaking lots of plans.
-      final Collection<RexSargBuilder> builders = map.values();
-      return builders.stream().anyMatch(b -> b.build(false).complexity() > 1)
-          || newTermsCount == 1
-          && builders.stream().allMatch(b -> simpleSarg(b.build()));
+      // final Collection<RexSargBuilder> builders = map.values();
+      // return builders.stream().anyMatch(b -> b.build(false).complexity() > 1)
+      //     || newTermsCount == 1
+      //     && builders.stream().allMatch(b -> simpleSarg(b.build()));
     }
 
     /**

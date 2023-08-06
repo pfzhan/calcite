@@ -339,6 +339,8 @@ public enum BuiltInMethod {
   UPPER(SqlFunctions.class, "upper", String.class),
   LOWER(SqlFunctions.class, "lower", String.class),
   ASCII(SqlFunctions.class, "ascii", String.class),
+  CHAR_FROM_ASCII(SqlFunctions.class, "charFromAscii", int.class),
+  CHAR_FROM_UTF8(SqlFunctions.class, "charFromUtf8", int.class),
   REPEAT(SqlFunctions.class, "repeat", String.class, int.class),
   SPACE(SqlFunctions.class, "space", int.class),
   SOUNDEX(SqlFunctions.class, "soundex", String.class),
@@ -639,6 +641,8 @@ public enum BuiltInMethod {
       long.class),
   BIG_DECIMAL_ADD(BigDecimal.class, "add", BigDecimal.class),
   BIG_DECIMAL_NEGATE(BigDecimal.class, "negate"),
+  // see https://olapio.atlassian.net/browse/KE-42058
+  BIG_DECIMAL_SET_SCALE(BigDecimal.class, "setScale", int.class, int.class),
   COMPARE_TO(Comparable.class, "compareTo", Object.class);
 
   @SuppressWarnings("ImmutableEnumChecker")

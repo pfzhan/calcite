@@ -755,7 +755,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
     return !isRolledUpColumn(exp, scope);
   }
 
-  private boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,
+  protected boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,
       List<Map.Entry<String, RelDataType>> fields, boolean includeSystemVars,
       SelectScope scope, SqlIdentifier id, RelDataTypeField field) {
     switch (field.getType().getStructKind()) {
