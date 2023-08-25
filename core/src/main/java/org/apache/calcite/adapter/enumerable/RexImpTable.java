@@ -2332,6 +2332,8 @@ public class RexImpTable {
         final Primitive primitive = Primitive.ofBoxOr(type0);
         if (primitive == null
             || type1 == BigDecimal.class
+            || backupMethodName.equals("plus")
+            && isNumberOrString(type0) && isNumberOrString(type1)
             || COMPARISON_OPERATORS.contains(op)
             && !COMP_OP_TYPES.contains(primitive)) {
           return Expressions.call(SqlFunctions.class, backupMethodName,
@@ -2350,6 +2352,15 @@ public class RexImpTable {
       }
       return Expressions.makeBinary(expressionType,
           argValueList.get(0), argValueList.get(1));
+    }
+
+    // see https://olapio.atlassian.net/browse/KE-42243
+    private boolean isNumberOrString(Type type) {
+      if (type == String.class || type == BigDecimal.class) {
+        return true;
+      }
+      Primitive primitive = Primitive.ofBoxOr(type);
+      return primitive != null && Number.class.isAssignableFrom(primitive.boxClass);
     }
 
     /** Returns whether any of a call's operands have ANY type. */

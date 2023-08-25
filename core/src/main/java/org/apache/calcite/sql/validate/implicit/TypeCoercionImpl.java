@@ -173,6 +173,12 @@ public class TypeCoercionImpl extends AbstractTypeCoercion {
       SqlCallBinding binding,
       RelDataType left,
       RelDataType right) {
+    // see https://olapio.atlassian.net/browse/KE-42243
+    // Calcite's implicit conversion may fail when the operator is "plus" and the left and right
+    // sides are numeric and string types respectively, which will not be supported in Kylin,
+    // and the logic is commented out for now.
+    return false;
+
     // For expression "NUMERIC <OP> CHARACTER",
     // PostgreSQL and MS-SQL coerce the CHARACTER operand to NUMERIC,
     // i.e. for '9':VARCHAR(1) / 2: INT, '9' would be coerced to INTEGER,
@@ -183,20 +189,20 @@ public class TypeCoercionImpl extends AbstractTypeCoercion {
 
     // Keep sync with PostgreSQL and MS-SQL because their behaviors are more in
     // line with the SQL standard.
-    if (SqlTypeUtil.isString(left) && SqlTypeUtil.isNumeric(right)) {
-      // If the numeric operand is DECIMAL type, coerce the STRING operand to
-      // max precision/scale DECIMAL.
-      if (SqlTypeUtil.isDecimal(right)) {
-        right = SqlTypeUtil.getMaxPrecisionScaleDecimal(factory);
-      }
-      return coerceOperandType(binding.getScope(), binding.getCall(), 0, right);
-    } else if (SqlTypeUtil.isNumeric(left) && SqlTypeUtil.isString(right)) {
-      if (SqlTypeUtil.isDecimal(left)) {
-        left = SqlTypeUtil.getMaxPrecisionScaleDecimal(factory);
-      }
-      return coerceOperandType(binding.getScope(), binding.getCall(), 1, left);
-    }
-    return false;
+//    if (SqlTypeUtil.isString(left) && SqlTypeUtil.isNumeric(right)) {
+//      // If the numeric operand is DECIMAL type, coerce the STRING operand to
+//      // max precision/scale DECIMAL.
+//      if (SqlTypeUtil.isDecimal(right)) {
+//        right = SqlTypeUtil.getMaxPrecisionScaleDecimal(factory);
+//      }
+//      return coerceOperandType(binding.getScope(), binding.getCall(), 0, right);
+//    } else if (SqlTypeUtil.isNumeric(left) && SqlTypeUtil.isString(right)) {
+//      if (SqlTypeUtil.isDecimal(left)) {
+//        left = SqlTypeUtil.getMaxPrecisionScaleDecimal(factory);
+//      }
+//      return coerceOperandType(binding.getScope(), binding.getCall(), 1, left);
+//    }
+//    return false;
   }
 
   /**
