@@ -3045,6 +3045,19 @@ public class SqlFunctions {
     return x * DateTimeUtils.MILLIS_PER_DAY + millis;
   }
 
+  // see https://olapio.atlassian.net/browse/AL-8759
+  public static String addMonths(String tsString, int m) {
+    if (tsString.length() == 10) {
+      int newDate = addMonths(DateTimeUtils.dateStringToUnixDate(tsString), m);
+      return DateTimeUtils.unixDateToString(newDate);
+    } else if (tsString.length() == 19) {
+      long newTimestamp = addMonths(DateTimeUtils.timestampStringToUnixDate(tsString), m);
+      return DateTimeUtils.unixTimestampToString(newTimestamp);
+    } else {
+      throw new IllegalArgumentException("Wrong date/timestamp format for calcite addMonths func");
+    }
+  }
+
   /** Adds a given number of months to a date, represented as the number of
    * days since the epoch. */
   public static int addMonths(int date, int m) {
@@ -3081,6 +3094,29 @@ public class SqlFunctions {
       return 30;
     default:
       return 31;
+    }
+  }
+
+  public static String addDays(String tsString, long v) {
+    if (tsString.length() == 10) {
+      int newDate = DateTimeUtils.dateStringToUnixDate(tsString)
+          + (int) (v / DateTimeUtils.MILLIS_PER_DAY);
+      return DateTimeUtils.unixDateToString(newDate);
+    } else if (tsString.length() == 19) {
+      long newTimestamp = DateTimeUtils.timestampStringToUnixDate(tsString) + v;
+      return DateTimeUtils.unixTimestampToString(newTimestamp);
+    } else {
+      throw new IllegalArgumentException("Wrong date/timestamp format for calcite addDays func");
+    }
+  }
+
+  public static long addMills(String tsString, long v) {
+    if (tsString.length() == 10) {
+      return DateTimeUtils.dateStringToUnixDate(tsString) * DateTimeUtils.MILLIS_PER_DAY + v;
+    } else if (tsString.length() == 19) {
+      return DateTimeUtils.timestampStringToUnixDate(tsString) + v;
+    } else {
+      throw new IllegalArgumentException("Wrong date/timestamp format for calcite addMills func");
     }
   }
 

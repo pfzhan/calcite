@@ -320,6 +320,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_MINUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_PLUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UPPER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.USER;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_DAY;
 
 import static java.util.Objects.requireNonNull;
 
@@ -2954,10 +2955,14 @@ public class RexImpTable {
         case TIME:
           return Expressions.convert_(trop0, long.class);
         default:
-          final BuiltInMethod method =
-              operand0.getType().getSqlTypeName() == SqlTypeName.TIMESTAMP
-                  ? BuiltInMethod.ADD_MONTHS
-                  : BuiltInMethod.ADD_MONTHS_INT;
+          final BuiltInMethod method;
+          if (operand0.getType().getSqlTypeName() == SqlTypeName.TIMESTAMP) {
+            method = BuiltInMethod.ADD_MONTHS;
+          } else if (operand0.getType().getSqlTypeName() == SqlTypeName.CHAR) {
+            method = BuiltInMethod.ADD_MONTHS_STRING;
+          } else {
+            method = BuiltInMethod.ADD_MONTHS_INT;
+          }
           return Expressions.call(method.method, trop0, trop1);
         }
 
@@ -2975,7 +2980,17 @@ public class RexImpTable {
         case MINUS:
           return normalize(typeName, Expressions.subtract(trop0, trop1));
         default:
-          return normalize(typeName, Expressions.add(trop0, trop1));
+          if (typeName1 == INTERVAL_DAY
+              && operand0.getType().getSqlTypeName() == SqlTypeName.CHAR) {
+            final BuiltInMethod dMethod = BuiltInMethod.ADD_DAYS_STRING;
+            return Expressions.call(dMethod.method, trop0, trop1);
+          } else if (typeName1 != INTERVAL_DAY
+              && operand0.getType().getSqlTypeName() == SqlTypeName.CHAR) {
+            final BuiltInMethod mMethod = BuiltInMethod.ADD_MILLS_STRING;
+            return Expressions.call(mMethod.method, trop0, trop1);
+          } else {
+            return normalize(typeName, Expressions.add(trop0, trop1));
+          }
         }
 
       default:
