@@ -321,6 +321,9 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_PLUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UPPER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.USER;
 import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_DAY;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_HOUR;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_MINUTE;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_SECOND;
 
 import static java.util.Objects.requireNonNull;
 
@@ -3005,6 +3008,23 @@ public class RexImpTable {
           default:
             break;
           }
+
+          if (typeName == INTERVAL_DAY
+              && (call.getOperands().get(1).getType().getSqlTypeName() == SqlTypeName.CHAR
+              || call.getOperands().get(0).getType().getSqlTypeName() == SqlTypeName.CHAR)) {
+            return Expressions.call(BuiltInMethod.SUBTRACT_DAYS.method,
+                trop0, trop1);
+          }
+
+          if ((typeName == INTERVAL_HOUR
+              || typeName == INTERVAL_MINUTE
+              || typeName == INTERVAL_SECOND)
+              && (call.getOperands().get(1).getType().getSqlTypeName() == SqlTypeName.CHAR
+                  || call.getOperands().get(0).getType().getSqlTypeName() == SqlTypeName.CHAR)) {
+            return Expressions.call(BuiltInMethod.SUBTRACT_MIllS.method,
+                trop0, trop1);
+          }
+
           TimeUnit fromUnit =
               typeName1 == SqlTypeName.DATE ? TimeUnit.DAY : TimeUnit.MILLISECOND;
           TimeUnit toUnit = TimeUnit.MILLISECOND;
