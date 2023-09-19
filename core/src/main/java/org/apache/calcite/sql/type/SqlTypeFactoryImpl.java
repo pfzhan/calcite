@@ -882,7 +882,9 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl {
    * itself. */
   static class UnknownSqlType extends BasicSqlType {
     UnknownSqlType(RelDataTypeFactory typeFactory) {
-      this(typeFactory.getTypeSystem(), false);
+      // see https://olapio.atlassian.net/browse/KE-42701
+      // this(typeFactory.getTypeSystem(), false);
+      this(typeFactory.getTypeSystem(), true);
     }
 
     private UnknownSqlType(RelDataTypeSystem typeSystem, boolean nullable) {
