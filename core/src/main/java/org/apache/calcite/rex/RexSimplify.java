@@ -264,15 +264,16 @@ public class RexSimplify {
     if (strong.isNull(e)) {
       // Only boolean NULL (aka UNKNOWN) can be converted to FALSE. Even in
       // unknownAs=FALSE mode, we must not convert a NULL integer (say) to FALSE
-      if (e.getType().getSqlTypeName() == SqlTypeName.BOOLEAN) {
-        switch (unknownAs) {
-        case FALSE:
-        case TRUE:
-          return rexBuilder.makeLiteral(unknownAs.toBoolean());
-        default:
-          break;
-        }
-      }
+      // see https://olapio.atlassian.net/browse/KE-42709
+//      if (e.getType().getSqlTypeName() == SqlTypeName.BOOLEAN) {
+//        switch (unknownAs) {
+//        case FALSE:
+//        case TRUE:
+//          return rexBuilder.makeLiteral(unknownAs.toBoolean());
+//        default:
+//          break;
+//        }
+//      }
       return rexBuilder.makeNullLiteral(e.getType());
     }
     switch (e.getKind()) {
@@ -1984,8 +1985,9 @@ public class RexSimplify {
       case LITERAL:
         if (RexLiteral.isNullLiteral(term)) {
           if (unknownAs == FALSE) {
-            terms.remove(i);
-            --i;
+            // see https://olapio.atlassian.net/browse/KE-42709
+//            terms.remove(i);
+//            --i;
             continue;
           } else if (unknownAs == TRUE) {
             return trueLiteral;
