@@ -18,6 +18,7 @@ package org.apache.calcite.sql.type;
 
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperandCountRange;
@@ -69,6 +70,10 @@ public class FamilyOperandTypeChecker implements SqlSingleOperandTypeChecker {
       return true;
     }
     if (SqlUtil.isNullLiteral(node, false)) {
+      if (SqlStdOperatorTable.SUBSTRING.equals(callBinding.getOperator())) {
+          // todo: Hard Code, when kyclacite update to 1.30, need new implement
+          return true;
+      }
       if (throwOnFailure) {
         throw callBinding.getValidator().newValidationError(node,
             RESOURCE.nullIllegal());
