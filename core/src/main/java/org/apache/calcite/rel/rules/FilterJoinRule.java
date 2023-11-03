@@ -16,12 +16,15 @@
  */
 package org.apache.calcite.rel.rules;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.EquiJoin;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -32,11 +35,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -131,11 +129,6 @@ public abstract class FilterJoinRule extends RelOptRule {
         RelOptUtil.conjunctions(join.getCondition());
     final List<RexNode> origJoinFilters = ImmutableList.copyOf(joinFilters);
 
-    // HACK POINT
-    if (join.getJoinType() != JoinRelType.INNER || joinFilters.size() != 0) {
-      return;
-    }
-
     // If there is only the joinRel,
     // make sure it does not match a cartesian product joinRel
     // (with "true" condition), otherwise this rule will be applied
@@ -153,7 +146,9 @@ public abstract class FilterJoinRule extends RelOptRule {
 
     // Simplify Outer Joins
     JoinRelType joinType = join.getJoinType();
+    boolean pushInto = canPushIntoFromAbove(filter);
     if (smart
+        && pushInto
         && !origAboveFilters.isEmpty()
         && join.getJoinType() != JoinRelType.INNER) {
       joinType = RelOptUtil.simplifyJoin(join, origAboveFilters, joinType);
@@ -172,11 +167,11 @@ public abstract class FilterJoinRule extends RelOptRule {
     // filters. They can be pushed down if they are not on the NULL
     // generating side.
     boolean filterPushed = false;
-    if (RelOptUtil.classifyFilters(
+    if (pushInto && RelOptUtil.classifyFilters(
         join,
         aboveFilters,
         joinType,
-        !(join instanceof EquiJoin),
+        true,
         !joinType.generatesNullsOnLeft(),
         !joinType.generatesNullsOnRight(),
         joinFilters,
@@ -281,6 +276,11 @@ public abstract class FilterJoinRule extends RelOptRule {
             RelOptUtil.getFieldTypeList(relBuilder.peek().getRowType())));
 
     call.transformTo(relBuilder.build());
+  }
+
+  // https://olapio.atlassian.net/browse/AL-8813
+  protected boolean canPushIntoFromAbove(Filter filter) {
+    return true;
   }
 
   /**

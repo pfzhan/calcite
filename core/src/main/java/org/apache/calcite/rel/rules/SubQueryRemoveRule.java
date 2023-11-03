@@ -16,6 +16,8 @@
  */
 package org.apache.calcite.rel.rules;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -45,9 +47,6 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +80,7 @@ public abstract class SubQueryRemoveRule extends RelOptRule {
           builder.push(project.getInput());
           final int fieldCount = builder.peek().getRowType().getFieldCount();
           final RexNode target = apply(e, ImmutableSet.<CorrelationId>of(),
-              logic, builder, 1, fieldCount, false);
+              logic, builder, 1, fieldCount);
           final RexShuttle shuttle = new ReplaceSubQueryShuttle(e, target);
           builder.project(shuttle.apply(project.getProjects()),
               project.getRowType().getFieldNames());
@@ -113,8 +112,7 @@ public abstract class SubQueryRemoveRule extends RelOptRule {
             final Set<CorrelationId>  variablesSet =
                 RelOptUtil.getVariablesUsed(e.rel);
             final RexNode target = apply(e, variablesSet, logic, builder, 1,
-                    builder.peek().getRowType().getFieldCount(),
-                    c.getKind() == SqlKind.EQUALS && variablesSet.isEmpty());
+                    builder.peek().getRowType().getFieldCount());
             final RexShuttle shuttle = new ReplaceSubQueryShuttle(e, target);
             c = c.accept(shuttle);
           }
@@ -141,7 +139,7 @@ public abstract class SubQueryRemoveRule extends RelOptRule {
           builder.push(join.getRight());
           final int fieldCount = join.getRowType().getFieldCount();
           final RexNode target = apply(e, ImmutableSet.<CorrelationId>of(),
-              logic, builder, 2, fieldCount, false);
+              logic, builder, 2, fieldCount);
           final RexShuttle shuttle = new ReplaceSubQueryShuttle(e, target);
           builder.join(join.getJoinType(), shuttle.apply(join.getCondition()));
           builder.project(fields(builder, join.getRowType().getFieldCount()));
@@ -164,7 +162,7 @@ public abstract class SubQueryRemoveRule extends RelOptRule {
 
   protected RexNode apply(RexSubQuery e, Set<CorrelationId> variablesSet,
       RelOptUtil.Logic logic,
-      RelBuilder builder, int inputCount, int offset, boolean forceBuildInnerJoin) {
+      RelBuilder builder, int inputCount, int offset) {
     switch (e.getKind()) {
     case SCALAR_QUERY:
       builder.push(e.rel);
@@ -176,8 +174,7 @@ public abstract class SubQueryRemoveRule extends RelOptRule {
             builder.aggregateCall(SqlStdOperatorTable.SINGLE_VALUE, false,
                 false, null, null, builder.field(0)));
       }
-      builder.join(forceBuildInnerJoin ? JoinRelType.INNER : JoinRelType.LEFT,
-              builder.literal(true), variablesSet);
+      builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
       return field(builder, inputCount, offset);
 
     case SOME:
