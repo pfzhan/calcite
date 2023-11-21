@@ -45,11 +45,6 @@ import java.util.List;
 import static org.apache.calcite.plan.RelOptUtil.conjunctions;
 
 /**
- * Turn it off.
- * Though try to turn it off in OLAPTableScan, sometimes it still triggerd.
- */
-
-/**
  * Planner rule that pushes filters above and
  * within a join node into the join node and/or its children nodes.
  *
@@ -76,11 +71,6 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
         RelOptUtil.conjunctions(join.getCondition());
     final List<RexNode> origJoinFilters = ImmutableList.copyOf(joinFilters);
 
-    // HACK POINT
-    if (join.getJoinType() != JoinRelType.INNER || joinFilters.size() != 0) {
-      return;
-    }
-
     // If there is only the joinRel,
     // make sure it does not match a cartesian product joinRel
     // (with "true" condition), otherwise this rule will be applied
@@ -98,7 +88,9 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
 
     // Simplify Outer Joins
     JoinRelType joinType = join.getJoinType();
+    boolean pushInto = canPushIntoFromAbove(filter);
     if (config.isSmart()
+        && pushInto
         && !origAboveFilters.isEmpty()
         && join.getJoinType() != JoinRelType.INNER) {
       joinType = RelOptUtil.simplifyJoin(join, origAboveFilters, joinType);
@@ -117,7 +109,7 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
     // filters. They can be pushed down if they are not on the NULL
     // generating side.
     boolean filterPushed = false;
-    if (RelOptUtil.classifyFilters(
+    if (pushInto && RelOptUtil.classifyFilters(
         join,
         aboveFilters,
         joinType.canPushIntoFromAbove(),
@@ -255,6 +247,11 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
       }
     }
     return conjunctions;
+  }
+
+  // https://olapio.atlassian.net/browse/AL-8813
+  protected boolean canPushIntoFromAbove(Filter filter) {
+    return true;
   }
 
   /**
