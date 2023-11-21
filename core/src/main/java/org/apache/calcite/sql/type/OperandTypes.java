@@ -28,8 +28,12 @@ import org.apache.calcite.sql.SqlUtil;
 
 import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -118,18 +122,21 @@ public abstract class OperandTypes {
    * Creates a checker that passes if any one of the rules passes.
    */
   public static SqlOperandTypeChecker or(SqlOperandTypeChecker... rules) {
-    return new CompositeOperandTypeChecker(
-        CompositeOperandTypeChecker.Composition.OR,
-        ImmutableList.copyOf(rules), null, null);
+    return composite(CompositeOperandTypeChecker.Composition.OR,
+        ImmutableList.copyOf(rules), null, null, null);
   }
 
   /**
    * Creates a checker that passes if all of the rules pass.
    */
   public static SqlOperandTypeChecker and(SqlOperandTypeChecker... rules) {
-    return new CompositeOperandTypeChecker(
-        CompositeOperandTypeChecker.Composition.AND,
-        ImmutableList.copyOf(rules), null, null);
+    return and_(ImmutableList.copyOf(rules));
+  }
+
+  private static SqlOperandTypeChecker and_(
+      Iterable<SqlOperandTypeChecker> rules) {
+    return composite(CompositeOperandTypeChecker.Composition.AND,
+        ImmutableList.copyOf(rules), null, null, null);
   }
 
   /**
@@ -138,9 +145,33 @@ public abstract class OperandTypes {
    */
   public static SqlSingleOperandTypeChecker or(
       SqlSingleOperandTypeChecker... rules) {
-    return new CompositeSingleOperandTypeChecker(
-        CompositeOperandTypeChecker.Composition.OR,
+    return compositeSingle(CompositeOperandTypeChecker.Composition.OR,
         ImmutableList.copyOf(rules), null);
+  }
+
+  /** Creates a CompositeSingleOperandTypeChecker. Outside this package, use
+   * {@link SqlSingleOperandTypeChecker#and(SqlSingleOperandTypeChecker)},
+   * {@link OperandTypes#and}, {@link OperandTypes#or} and similar. */
+  private static SqlSingleOperandTypeChecker compositeSingle(
+      CompositeOperandTypeChecker.Composition composition,
+      List<? extends SqlSingleOperandTypeChecker> allowedRules,
+      @Nullable String allowedSignatures) {
+    final List<SqlSingleOperandTypeChecker> list = new ArrayList<>(allowedRules);
+    switch (composition) {
+    default:
+      break;
+    case AND:
+    case OR:
+      flatten(list, c -> c instanceof CompositeSingleOperandTypeChecker
+          && ((CompositeSingleOperandTypeChecker) c).composition == composition
+          ? ((CompositeSingleOperandTypeChecker) c).getRules()
+          : null);
+    }
+    if (list.size() == 1) {
+      return list.get(0);
+    }
+    return new CompositeSingleOperandTypeChecker(composition,
+        ImmutableList.copyOf(list), allowedSignatures);
   }
 
   /**
@@ -149,8 +180,7 @@ public abstract class OperandTypes {
    */
   public static SqlSingleOperandTypeChecker and(
       SqlSingleOperandTypeChecker... rules) {
-    return new CompositeSingleOperandTypeChecker(
-        CompositeOperandTypeChecker.Composition.AND,
+    return compositeSingle(CompositeOperandTypeChecker.Composition.AND,
         ImmutableList.copyOf(rules), null);
   }
 
@@ -161,7 +191,7 @@ public abstract class OperandTypes {
       SqlSingleOperandTypeChecker... rules) {
     return new CompositeOperandTypeChecker(
         CompositeOperandTypeChecker.Composition.SEQUENCE,
-        ImmutableList.copyOf(rules), allowedSignatures, null);
+        ImmutableList.copyOf(rules), allowedSignatures, null, null);
   }
 
   /**
@@ -172,7 +202,48 @@ public abstract class OperandTypes {
       SqlSingleOperandTypeChecker... rules) {
     return new CompositeOperandTypeChecker(
         CompositeOperandTypeChecker.Composition.REPEAT,
-        ImmutableList.copyOf(rules), null, range);
+        ImmutableList.copyOf(rules), null, null, range);
+  }
+
+  /** Creates a CompositeOperandTypeChecker. Outside this package, use
+   * {@link SqlSingleOperandTypeChecker#and(SqlSingleOperandTypeChecker)},
+   * {@link OperandTypes#and}, {@link OperandTypes#or} and similar. */
+  static SqlOperandTypeChecker composite(
+      CompositeOperandTypeChecker.Composition composition,
+      List<? extends SqlOperandTypeChecker> allowedRules,
+      @Nullable String allowedSignatures,
+      @Nullable BiFunction<SqlOperator, String, String> signatureGenerator,
+      @Nullable SqlOperandCountRange range) {
+    final List<SqlOperandTypeChecker> list = new ArrayList<>(allowedRules);
+    switch (composition) {
+    default:
+      break;
+    case AND:
+    case OR:
+      flatten(list, c -> c instanceof CompositeOperandTypeChecker
+          && ((CompositeOperandTypeChecker) c).composition == composition
+          ? ((CompositeOperandTypeChecker) c).getRules()
+          : null);
+    }
+    if (list.size() == 1) {
+      return list.get(0);
+    }
+    return new CompositeOperandTypeChecker(composition,
+        ImmutableList.copyOf(list), allowedSignatures, signatureGenerator, range);
+  }
+
+  /** Helper for {@link #compositeSingle} and {@link #composite}. */
+  private static <E> void flatten(List<E> list,
+      Function<E, @Nullable List<? extends E>> expander) {
+    for (int i  = 0; i < list.size();) {
+      @Nullable List<? extends E> list2 = expander.apply(list.get(i));
+      if (list2 == null) {
+        ++i;
+      } else {
+        list.remove(i);
+        list.addAll(i, list2);
+      }
+    }
   }
 
   // ----------------------------------------------------------------------

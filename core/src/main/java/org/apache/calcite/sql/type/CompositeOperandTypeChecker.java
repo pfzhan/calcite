@@ -34,6 +34,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -92,6 +93,7 @@ public class CompositeOperandTypeChecker implements SqlOperandTypeChecker {
   protected final ImmutableList<@UnknownKeyFor ? extends SqlOperandTypeChecker> allowedRules;
   protected final Composition composition;
   private final @Nullable String allowedSignatures;
+  private final @Nullable BiFunction<SqlOperator, String, String> signatureGenerator;
 
   //~ Constructors -----------------------------------------------------------
 
@@ -103,10 +105,12 @@ public class CompositeOperandTypeChecker implements SqlOperandTypeChecker {
       Composition composition,
       ImmutableList<? extends SqlOperandTypeChecker> allowedRules,
       @Nullable String allowedSignatures,
+      @Nullable BiFunction<SqlOperator, String, String> signatureGenerator,
       @Nullable SqlOperandCountRange range) {
     this.allowedRules = requireNonNull(allowedRules, "allowedRules");
     this.composition = requireNonNull(composition, "composition");
     this.allowedSignatures = allowedSignatures;
+    this.signatureGenerator = signatureGenerator;
     this.range = range;
     assert (range != null) == (composition == Composition.REPEAT);
     assert allowedRules.size() + (range == null ? 0 : 1) > 1;
@@ -134,6 +138,9 @@ public class CompositeOperandTypeChecker implements SqlOperandTypeChecker {
   @Override public String getAllowedSignatures(SqlOperator op, String opName) {
     if (allowedSignatures != null) {
       return allowedSignatures;
+    }
+    if (signatureGenerator != null) {
+      return signatureGenerator.apply(op, opName);
     }
     if (composition == Composition.SEQUENCE) {
       throw new AssertionError(
