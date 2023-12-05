@@ -671,8 +671,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
                     ImmutableList.of(child.name, columnName),
                     startPosition);
             // Don't add expanded rolled up columns
-            // HACK POINT: exclude ComputedColumns
-            if (needAddOrExpandField(exp, scope, field)) {
+            if (!isRolledUpColumn(exp, scope)) {
               addOrExpandField(
                       selectItems,
                       aliases,
@@ -755,11 +754,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
         ? node
         : SqlStdOperatorTable.CAST.createCall(SqlParserPos.ZERO,
             node, SqlTypeUtil.convertTypeToSpec(desiredType));
-  }
-
-  protected boolean needAddOrExpandField(SqlIdentifier exp,
-      SelectScope scope, RelDataTypeField field) {
-    return !isRolledUpColumn(exp, scope);
   }
 
   protected boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,

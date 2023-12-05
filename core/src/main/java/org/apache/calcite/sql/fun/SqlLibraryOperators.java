@@ -141,6 +141,14 @@ public abstract class SqlLibraryOperators {
               .andThen(SqlTypeTransforms.TO_NULLABLE_ALL),
           null, OperandTypes.SAME_SAME, SqlFunctionCategory.SYSTEM);
 
+  /** The "NVL(value, value)" function. */
+  @LibraryOperator(libraries = {BIG_QUERY, HIVE, SPARK})
+  public static final SqlFunction IFNULL =
+      new SqlFunction("IFNULL", SqlKind.NVL,
+          ReturnTypes.LEAST_RESTRICTIVE
+              .andThen(SqlTypeTransforms.TO_NULLABLE_ALL),
+          null, OperandTypes.SAME_SAME, SqlFunctionCategory.SYSTEM);
+
   /** The "LTRIM(string)" function. */
   @LibraryOperator(libraries = {ORACLE})
   public static final SqlFunction LTRIM =

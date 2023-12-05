@@ -908,8 +908,8 @@ allprojects {
                             maven {
                                 url = finalUrl
                                 credentials {
-                                    username = "yaguang.jia"
-                                    password = "Qwer1234,"
+                                    username = "guoliang.sun"
+                                    password = "Sgl19960301"
                                 }
                             }
                         }

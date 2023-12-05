@@ -26,7 +26,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCallBinding;
-import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexRangeRef;
@@ -72,7 +71,6 @@ import org.apache.calcite.sql.fun.SqlSubstringFunction;
 import org.apache.calcite.sql.fun.SqlTrimFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker.Consistency;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
@@ -121,6 +119,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
         SqlStdOperatorTable.IS_NOT_NULL);
     addAlias(SqlLibraryOperators.NULL_SAFE_EQUAL, SqlStdOperatorTable.IS_NOT_DISTINCT_FROM);
     addAlias(SqlStdOperatorTable.PERCENT_REMAINDER, SqlStdOperatorTable.MOD);
+    addAlias(SqlLibraryOperators.IFNULL, SqlLibraryOperators.NVL);
 
     // Register convertlets for specific objects.
     registerOp(SqlStdOperatorTable.CAST, this::convertCast);
@@ -261,7 +260,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     registerOp(SqlStdOperatorTable.CEIL, floorCeilConvertlet);
 
     registerOp(SqlStdOperatorTable.TIMESTAMP_ADD, new TimestampAddConvertlet());
-    registerOp(SqlStdOperatorTable.TIMESTAMP_DIFF, new TimestampDiffConvertlet());
+    registerOp(SqlStdOperatorTable.TIMESTAMP_DIFF,
+        new TimestampDiffConvertlet());
 
     registerOp(SqlStdOperatorTable.INTERVAL,
         StandardConvertletTable::convertInterval);
@@ -959,8 +959,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   public static Boolean isDateCompareWithCharacter(List<RelDataType> types) {
     if (types.size() >= 2
-            && (
-                (types.get(0).getFamily().equals(SqlTypeFamily.DATE)
+        && (
+            (types.get(0).getFamily().equals(SqlTypeFamily.DATE)
             && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
             || (types.get(1).getFamily().equals(SqlTypeFamily.DATE)
             && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
@@ -971,8 +971,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   public static Boolean isTimestampCompareWithCharacter(List<RelDataType> types) {
     if (types.size() >= 2
-            && (
-                (types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
+        && (
+            (types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
             && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
             || (types.get(1).getFamily().equals(SqlTypeFamily.TIMESTAMP)
             && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
@@ -989,29 +989,19 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           largestCharType = dataType;
         } else {
           largestCharType = largestCharType.getPrecision()
-                  > dataType.getPrecision() ? largestCharType : dataType;
+              > dataType.getPrecision() ? largestCharType : dataType;
         }
       }
     }
     return largestCharType;
   }
 
-  /**
-   * OVERRIDE POINT
-   * see https://olapio.atlassian.net/browse/KE-42057
-   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
-   * FYI: https://github.com/Kyligence/KAP/issues/13872
-   */
-  /*private static List<RexNode> convertOperands(SqlRexContext cx,
-      SqlCall call, SqlOperandTypeChecker.Consistency consistency) {
-    return convertOperands(cx, call, call.getOperandList(), consistency);
-  }*/
-  public static List<RexNode> convertOperands(SqlRexContext cx,
+  private static List<RexNode> convertOperands(SqlRexContext cx,
       SqlCall call, SqlOperandTypeChecker.Consistency consistency) {
     return convertOperands(cx, call, call.getOperandList(), consistency);
   }
 
-  /*private static List<RexNode> convertOperands(SqlRexContext cx,
+  private static List<RexNode> convertOperands(SqlRexContext cx,
       SqlCall call, List<SqlNode> nodes,
       SqlOperandTypeChecker.Consistency consistency) {
     final List<RexNode> exprs = new ArrayList<>();
@@ -1027,53 +1017,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           exprs.add(cx.getRexBuilder().ensureType(type, expr, true)));
     }
     if (exprs.size() > 1) {
-      RelDataType type =
-              consistentType(cx, consistency, RexUtil.types(exprs));
-
-      *//* OVERRIDE POINT *//*
-      if (type == null) {
-        type = consistentType2(cx, consistency, exprs);
-      }
-
-      if (type != null) {
-        final List<RexNode> oldExprs = new ArrayList<>(exprs);
-        exprs.clear();
-        for (RexNode expr : oldExprs) {
-          exprs.add(cx.getRexBuilder().ensureType(type, expr, true));
-        }
-      }
-    }
-    return exprs;
-  }*/
-  public static List<RexNode> convertOperands(SqlRexContext cx,
-      SqlCall call, List<SqlNode> nodes,
-      SqlOperandTypeChecker.Consistency consistency) {
-    final List<RexNode> exprs = new ArrayList<>();
-    for (SqlNode node : nodes) {
-      exprs.add(cx.convertExpression(node));
-    }
-    // see https://olapio.atlassian.net/browse/KE-42045
-    // Calcite 1.30 Ensures expression is interpreted as a specified type. The returned
-    // expression may be wrapped with a cast.
-    if (call != null) {
-      final List<RelDataType> operandTypes =
-          cx.getValidator().getValidatedOperandTypes(call);
-      if (operandTypes != null) {
-        final List<RexNode> oldExprs = new ArrayList<>(exprs);
-        exprs.clear();
-        Pair.forEach(oldExprs, operandTypes, (expr, type) ->
-            exprs.add(cx.getRexBuilder().ensureType(type, expr, true)));
-      }
-    }
-    if (exprs.size() > 1) {
-      RelDataType type =
+      final RelDataType type =
           consistentType(cx, consistency, RexUtil.types(exprs));
-
-      /* OVERRIDE POINT */
-      if (type == null) {
-        type = consistentType2(cx, consistency, exprs);
-      }
-
       if (type != null) {
         final List<RexNode> oldExprs = new ArrayList<>(exprs);
         exprs.clear();
@@ -1085,128 +1030,6 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     return exprs;
   }
 
-  /**
-   * OVERRIDE POINT
-   * see https://olapio.atlassian.net/browse/KE-42057
-   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
-   * FYI: https://github.com/Kyligence/KAP/issues/13872
-   */
-  /* OVERRIDE POINT */
-  // https://github.com/Kyligence/KAP/issues/4037
-  // For LEAST_RESTRICTIVE consistency, which is the '=' operator, convert constants implicitly
-  /*private static RelDataType consistentType2(SqlRexContext cx,
-      Consistency consistency, List<RexNode> exprs) {
-    if (Consistency.LEAST_RESTRICTIVE != consistency) {
-      return null;
-    }
-    if (exprs.size() <= 1) {
-      return null;
-    }
-    if (isTimestampCompareWithCharacter(RexUtil.types(exprs))) {
-      return null;
-    }
-
-    // check all expressions are constants but one
-    RexNode oneNonConst = null;
-    for (RexNode expr : exprs) {
-      if (expr instanceof RexLiteral || expr instanceof RexDynamicParam) {
-        continue;
-      }
-      // got a non-constant
-      if (oneNonConst != null) {
-        return null; // give up, since there is more than one non-constant
-      }
-      oneNonConst = expr;
-    }
-
-    return oneNonConst == null ? null : oneNonConst.getType();
-  }*/
-  private static RelDataType consistentType2(SqlRexContext cx,
-      Consistency consistency, List<RexNode> exprs) {
-    if (Consistency.LEAST_RESTRICTIVE != consistency
-        && Consistency.LEAST_RESTRICTIVE_NO_CONVERT_TO_VARYING != consistency) {
-      return null;
-    }
-    if (exprs.size() <= 1) {
-      return null;
-    }
-    if (isTimestampCompareWithCharacter(RexUtil.types(exprs))) {
-      return null;
-    }
-
-    // check all expressions are constants but one
-    RexNode oneNonConst = null;
-    for (RexNode expr : exprs) {
-      if (expr instanceof RexLiteral || expr instanceof RexDynamicParam) {
-        continue;
-      }
-      // got a non-constant
-      if (oneNonConst != null) {
-        return null; // give up, since there is more than one non-constant
-      }
-      oneNonConst = expr;
-    }
-
-    return oneNonConst == null ? null : oneNonConst.getType();
-  }
-
-  /**
-   * OVERRIDE POINT
-   * see https://olapio.atlassian.net/browse/KE-42057
-   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
-   * FYI: https://github.com/Kyligence/KAP/issues/13872
-   */
-  /*private static @Nullable RelDataType consistentType(SqlRexContext cx,
-      SqlOperandTypeChecker.Consistency consistency, List<RelDataType> types) {
-    switch (consistency) {
-    case COMPARE:
-      if (isDateCompareWithCharacter(types)) {
-        return findMaxPrecisionCharType(types);
-      }
-      if (isTimestampCompareWithCharacter(types)) {
-        return findMaxPrecisionCharType(types);
-      }
-      if (SqlTypeUtil.areSameFamily(types)) {
-        // All arguments are of same family. No need for explicit casts.
-        return null;
-      }
-      final List<RelDataType> nonCharacterTypes = new ArrayList<>();
-      for (RelDataType type : types) {
-        if (type.getFamily() != SqlTypeFamily.CHARACTER) {
-          nonCharacterTypes.add(type);
-        }
-      }
-      if (!nonCharacterTypes.isEmpty()) {
-        final int typeCount = types.size();
-        types = nonCharacterTypes;
-        if (nonCharacterTypes.size() < typeCount) {
-          final RelDataTypeFamily family =
-              nonCharacterTypes.get(0).getFamily();
-          if (family instanceof SqlTypeFamily) {
-            // The character arguments might be larger than the numeric
-            // argument. Give ourselves some headroom.
-            switch ((SqlTypeFamily) family) {
-            case INTEGER:
-            case NUMERIC:
-              nonCharacterTypes.add(
-                  cx.getTypeFactory().createSqlType(SqlTypeName.BIGINT));
-              break;
-            default:
-              break;
-            }
-          }
-        }
-      }
-      // fall through
-    case LEAST_RESTRICTIVE:
-      if (isDateCompareWithCharacter(types)) {
-        return findMaxPrecisionCharType(types);
-      }
-      return cx.getTypeFactory().leastRestrictive(types);
-    default:
-      return null;
-    }
-  }*/
   private static @Nullable RelDataType consistentType(SqlRexContext cx,
       SqlOperandTypeChecker.Consistency consistency, List<RelDataType> types) {
     switch (consistency) {

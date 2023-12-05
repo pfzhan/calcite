@@ -25,6 +25,7 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.runtime.Geometries;
@@ -642,6 +643,11 @@ public class RexBuilder {
 
   boolean canRemoveCastFromLiteral(RelDataType toType, @Nullable Comparable value,
       SqlTypeName fromTypeName) {
+    if (value == null) {
+      return true;
+    } else if (isKylinUdfObjectType(toType)) {
+      return false;
+    }
     final SqlTypeName sqlType = toType.getSqlTypeName();
     if (!RexLiteral.valueMatchesType(value, sqlType, false)) {
       return false;
@@ -679,6 +685,15 @@ public class RexBuilder {
     }
 
     return true;
+  }
+
+  private static boolean isKylinUdfObjectType(RelDataType toType) {
+    if (toType instanceof RelDataTypeFactoryImpl.JavaType) {
+      // kylin udf to support null, very dirty to remove
+      RelDataTypeFactoryImpl.JavaType javaType = (RelDataTypeFactoryImpl.JavaType) toType;
+      return javaType.getJavaClass() == Object.class;
+    }
+    return false;
   }
 
   private RexNode makeCastExactToBoolean(RelDataType toType, RexNode exp) {
@@ -783,6 +798,9 @@ public class RexBuilder {
   public RexNode makeAbstractCast(
       RelDataType type,
       RexNode exp) {
+    if (isKylinUdfObjectType(type)) {
+      type = exp.getType();
+    }
     return new RexCall(
         type,
         SqlStdOperatorTable.CAST,
