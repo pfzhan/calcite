@@ -2975,6 +2975,11 @@ public class SqlToRelConverter {
           p.id, requiredCols, joinType);
     }
 
+    // OVERRIDE POINT
+    if (containOnlyCast(joinCond)) {
+      joinCond = convertCastCondition(joinCond);
+    }
+
     final RelNode node =
         relBuilder.push(leftRel)
             .push(rightRel)
@@ -2992,6 +2997,56 @@ public class SqlToRelConverter {
       }
     }
     return node;
+  }
+
+  // OVERRIDE POINT
+  private boolean containOnlyCast(RexNode node) {
+    boolean result = true;
+    switch (node.getKind()) {
+    case AND:
+    case EQUALS:
+      final RexCall call = (RexCall) node;
+      for (RexNode operand : call.getOperands()) {
+        result &= containOnlyCast(operand);
+      }
+      break;
+    case OR:
+    case INPUT_REF:
+    case LITERAL:
+    case CAST:
+      return true;
+    default:
+      return false;
+    }
+    return result;
+  }
+
+  // OVERRIDE POINT
+  private static RexNode convertCastCondition(RexNode node) {
+    switch (node.getKind()) {
+    case IS_NULL:
+    case IS_NOT_NULL:
+    case OR:
+    case AND:
+    case EQUALS:
+      RexCall call = (RexCall) node;
+      List<RexNode> list = new ArrayList();
+      for (RexNode operand : call.getOperands()) {
+        final RexNode e =
+            convertCastCondition(
+                operand);
+        list.add(e);
+      }
+      if (!list.equals(call.getOperands())) {
+        return call.clone(call.getType(), list);
+      }
+      return call;
+    case CAST:
+      call = (RexCall) node;
+      return  call.getOperands().get(0);
+    default:
+      return node;
+    }
   }
 
   private @Nullable CorrelationUse getCorrelationUse(Blackboard bb, final RelNode r0) {
