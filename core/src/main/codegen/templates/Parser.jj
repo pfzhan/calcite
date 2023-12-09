@@ -5829,6 +5829,7 @@ SqlJdbcDataTypeName JdbcOdbcDataTypeName() :
 {
     (<SQL_CHAR> | <CHAR>) { return SqlJdbcDataTypeName.SQL_CHAR; }
 |   (<SQL_VARCHAR> | <VARCHAR>) { return SqlJdbcDataTypeName.SQL_VARCHAR; }
+|   (<SQL_WVARCHAR> | <WVARCHAR>) { return SqlJdbcDataTypeName.SQL_VARCHAR; }
 |   (<SQL_DATE> | <DATE>) { return SqlJdbcDataTypeName.SQL_DATE; }
 |   (<SQL_TIME> | <TIME>) { return SqlJdbcDataTypeName.SQL_TIME; }
 |   (<SQL_TIMESTAMP> | <TIMESTAMP>) { return SqlJdbcDataTypeName.SQL_TIMESTAMP; }
@@ -6010,7 +6011,7 @@ SqlTypeNameSpec CharacterTypeName(Span s) :
             { sqlTypeName = SqlTypeName.CHAR; }
         )
     |
-        <VARCHAR> { s.add(this); sqlTypeName = SqlTypeName.VARCHAR; }
+        (<VARCHAR> | <WVARCHAR>) { s.add(this); sqlTypeName = SqlTypeName.VARCHAR; }
     )
     precision = PrecisionOpt()
     [
@@ -8479,6 +8480,7 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < SQL_TSI_YEAR: "SQL_TSI_YEAR" >
 |   < SQL_VARBINARY: "SQL_VARBINARY" >
 |   < SQL_VARCHAR: "SQL_VARCHAR" >
+|   < SQL_WVARCHAR: "SQL_WVARCHAR" >
 |   < SQRT: "SQRT" >
 |   < START: "START" >
 |   < STATE: "STATE" >
@@ -8577,6 +8579,7 @@ SqlPostfixOperator PostfixRowOperator() :
 |   < VAR_SAMP: "VAR_SAMP" >
 |   < VARBINARY: "VARBINARY" >
 |   < VARCHAR: "VARCHAR" >
+|   < WVARCHAR: "WVARCHAR" >
 |   < VARYING: "VARYING" >
 |   < VERSION: "VERSION" >
 |   < VERSIONING: "VERSIONING" >
