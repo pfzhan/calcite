@@ -1204,6 +1204,17 @@ public class SqlToRelConverter {
                   valueList,
                   (SqlInOperator) call.getOperator());
           return;
+        } else {
+          // keep in expression
+          RexNode inExp =
+              constructIn(bb,
+              leftKeys,
+              valueList,
+              call.getOperator().getKind());
+          if (inExp != null) {
+            subQuery.expr = inExp;
+          }
+          return;
         }
 
         // Otherwise, let convertExists translate
@@ -1518,6 +1529,24 @@ public class SqlToRelConverter {
       return ref.getIndex();
     default:
       throw new AssertionError();
+    }
+  }
+
+  private RexNode constructIn(Blackboard bb, List<RexNode> leftKeys, SqlNodeList valuesList,
+      SqlKind kind) {
+    List<RexNode> listRexNodes = new ArrayList<>(leftKeys);
+    for (SqlNode node : valuesList) {
+      listRexNodes.add(bb.convertExpression(node));
+    }
+
+    switch (kind) {
+    case NOT_IN:
+      return rexBuilder.makeCall(SqlStdOperatorTable.NOT_IN, listRexNodes);
+    case IN:
+    case SOME:
+      return rexBuilder.makeCall(SqlStdOperatorTable.IN, listRexNodes);
+    default:
+      return null;
     }
   }
 
