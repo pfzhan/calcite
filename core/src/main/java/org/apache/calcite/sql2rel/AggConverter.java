@@ -36,6 +36,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlSelectKeyword;
 import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -447,7 +448,7 @@ class AggConverter implements SqlVisitor<Void> {
         // special case for COUNT(*):  delete the *
         if (operand instanceof SqlIdentifier) {
           SqlIdentifier id = (SqlIdentifier) operand;
-          if (id.isStar()) {
+          if (id.isStar() || isSimpleCount(call)) {
             assert call.operandCount() == 1;
             assert args.isEmpty();
             break;
@@ -540,6 +541,14 @@ class AggConverter implements SqlVisitor<Void> {
             aggCallMapping,
             i -> convertedInputExprs.leftList().get(i).getType().isNullable());
     aggMapping.put(outerCall, rex);
+  }
+
+  private boolean isSimpleCount(SqlCall call) {
+    if (call.getOperator().isName("COUNT", false) && call.operandCount() == 1) {
+      final SqlNode parm = call.operand(0);
+      return parm instanceof SqlNumericLiteral && call.getFunctionQuantifier() == null;
+    }
+    return false;
   }
 
   private RelFieldCollation sortToFieldCollation(SqlNode expr,
