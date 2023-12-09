@@ -1536,6 +1536,15 @@ public abstract class SqlTypeUtil {
       return true;
     }
 
+    // allow boolean = integer (integer = boolean)
+    if (type1 instanceof BasicSqlType && type2 instanceof BasicSqlType) {
+      SqlTypeName typeName1 = ((BasicSqlType) type1).typeName;
+      SqlTypeName typeName2 = ((BasicSqlType) type2).typeName;
+      return typeName1 == SqlTypeName.INTEGER
+          && typeName2 == SqlTypeName.BOOLEAN
+          || typeName1 == SqlTypeName.BOOLEAN
+          && typeName2 == SqlTypeName.INTEGER;
+    }
     return false;
   }
 
