@@ -1088,11 +1088,17 @@ public class SqlFunctions {
 
   /** SQL UPPER(string) function. */
   public static String upper(String s) {
+    if (s == null) {
+      return "";
+    }
     return s.toUpperCase(Locale.ROOT);
   }
 
   /** SQL LOWER(string) function. */
   public static String lower(String s) {
+    if (s == null) {
+      return "";
+    }
     return s.toLowerCase(Locale.ROOT);
   }
 
@@ -1368,6 +1374,9 @@ public class SqlFunctions {
 
   /** SQL CHARACTER_LENGTH(string) function. */
   public static int charLength(String s) {
+    if (s == null) {
+      return 0;
+    }
     return s.length();
   }
 
@@ -1593,6 +1602,9 @@ public class SqlFunctions {
       String s, boolean strict) {
     if (strict && seek.length() != 1) {
       throw RESOURCE.trimError().ex();
+    }
+    if (s == null) {
+      return null;
     }
     int j = s.length();
     if (right) {
