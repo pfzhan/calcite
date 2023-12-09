@@ -64,7 +64,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl {
       precision = maxPrecision;
     }
     if (typeName.allowsScale()) {
-      return createSqlType(typeName, precision, typeName.getDefaultScale());
+      return createSqlType(typeName, precision, typeSystem.getDefaultScale(typeName));
     }
     assertBasic(typeName);
     assert (precision >= 0)

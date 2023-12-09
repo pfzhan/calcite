@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Implementation of {@link org.apache.calcite.rel.type.RelDataTypeSystem}
  * that sends all methods to an underlying object. */
-public class DelegatingTypeSystem implements RelDataTypeSystem {
+public class DelegatingTypeSystem extends AbstractRelDataTypeSystem {
   private final RelDataTypeSystem typeSystem;
 
   /** Creates a {@code DelegatingTypeSystem}. */

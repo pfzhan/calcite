@@ -47,6 +47,13 @@ public interface RelDataTypeSystem {
   int getDefaultPrecision(SqlTypeName typeName);
 
   /**
+   * return default scale given a sql type name.
+   *
+   * @return Default scale
+   */
+  int getDefaultScale(SqlTypeName typeName);
+
+  /**
    * Returns the maximum precision (or length) allowed for this type, or -1 if
    * precision/length are not applicable for this type.
    *
