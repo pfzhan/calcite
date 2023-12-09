@@ -215,6 +215,7 @@ public enum SqlConformanceEnum implements SqlConformance {
 
   @Override public boolean isBangEqualAllowed() {
     switch (this) {
+    case DEFAULT:
     case LENIENT:
     case BABEL:
     case BIG_QUERY:
