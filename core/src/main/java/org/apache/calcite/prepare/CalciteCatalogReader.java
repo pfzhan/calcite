@@ -159,6 +159,14 @@ public class CalciteCatalogReader implements Prepare.CatalogReader {
             SqlValidatorUtil.getSchema(rootSchema, schemaPath, nameMatcher);
         if (schema != null) {
           schemaNameList.addAll(schema.getPath());
+        } else {
+          // If the default schema is null, find other schemas.
+          for (CalciteSchema subSchema : rootSchema.getSubSchemaMap().values()) {
+            if (!subSchema.getFunctionNames().isEmpty()) {
+              schemaNameList.addAll(subSchema.getPath());
+              break;
+            }
+          }
         }
       }
     }
