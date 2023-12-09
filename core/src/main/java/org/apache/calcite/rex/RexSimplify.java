@@ -649,11 +649,14 @@ public class RexSimplify {
   // package-protected only for a deprecated method; treat as private
   RexNode simplifyAnds(Iterable<? extends RexNode> nodes,
       RexUnknownAs unknownAs) {
-    final List<RexNode> terms = new ArrayList<>();
+    List<RexNode> terms = new ArrayList<>();
     final List<RexNode> notTerms = new ArrayList<>();
     for (RexNode e : nodes) {
       RelOptUtil.decomposeConjunction(e, terms, notTerms);
     }
+
+    // remove duplicate values
+    terms = new ArrayList<>(new LinkedHashSet<>(terms));
     simplifyList(terms, UNKNOWN);
     simplifyList(notTerms, UNKNOWN);
     if (unknownAs == FALSE) {
