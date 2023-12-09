@@ -122,4 +122,9 @@ public interface CalciteConnectionConfig extends ConnectionConfig {
    * {@code defaultMetaColumnFactory} is not null, the result is never null. */
   <T> @PolyNull T metaColumnFactory(Class<T> metaColumnFactoryClass,
       @PolyNull T defaultMetaColumnFactory);
+
+  /**
+   * Returns customer validation.
+   */
+  <T> T getCustomerValidation(Class<T> validationClass, T defaultValidation);
 }

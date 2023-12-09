@@ -613,7 +613,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
     }
   }
 
-  private boolean expandStar(List<SqlNode> selectItems, Set<String> aliases,
+  protected boolean expandStar(List<SqlNode> selectItems, Set<String> aliases,
       PairList<String, RelDataType> fields, boolean includeSystemVars,
       SelectScope scope, SqlNode node) {
     if (!(node instanceof SqlIdentifier)) {
@@ -1234,7 +1234,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
     return requireNonNull(scopes.get(node), () -> "scope for " + node);
   }
 
-  private @Nullable SqlValidatorNamespace getNamespace(SqlNode node,
+  protected @Nullable SqlValidatorNamespace getNamespace(SqlNode node,
       SqlValidatorScope scope) {
     if (node instanceof SqlIdentifier && scope instanceof DelegatingScope) {
       final SqlIdentifier id = (SqlIdentifier) node;
@@ -4028,7 +4028,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
 
 
   // Returns true iff the given column is actually rolled up.
-  private boolean isRolledUpColumn(SqlIdentifier identifier, SqlValidatorScope scope) {
+  protected boolean isRolledUpColumn(SqlIdentifier identifier, SqlValidatorScope scope) {
     Pair<String, String> pair = findTableColumnPair(identifier, scope);
 
     if (pair == null) {

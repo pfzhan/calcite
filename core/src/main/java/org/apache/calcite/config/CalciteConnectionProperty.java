@@ -157,6 +157,11 @@ public enum CalciteConnectionProperty implements ConnectionProperty {
    * default constructor or an {@code INSTANCE} constant. */
   TYPE_SYSTEM("typeSystem", Type.PLUGIN, null, false),
 
+  /**
+   * Customer validator.
+   */
+  CUSTOMER_VALIDATOR("customerValidator", Type.STRING, null, false),
+
   /** SQL conformance level.
    *
    * <p>Controls the semantics of ISO standard SQL features that are implemented

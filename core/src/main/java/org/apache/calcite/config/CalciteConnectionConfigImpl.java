@@ -26,10 +26,12 @@ import org.apache.calcite.sql.fun.SqlLibrary;
 import org.apache.calcite.sql.fun.SqlLibraryOperatorTableFactory;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
+import org.apache.calcite.sql.validate.SqlValidatorImpl;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Properties;
 
@@ -123,6 +125,21 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
     final SqlOperatorTable operatorTable =
         SqlLibraryOperatorTableFactory.INSTANCE.getOperatorTable(libraryList1);
     return operatorTableClass.cast(operatorTable);
+  }
+
+  @Override public <T> T getCustomerValidation(Class<T> validationClass, T defaultValidation) {
+    final String validationClazz =
+        CalciteConnectionProperty.CUSTOMER_VALIDATOR.wrap(properties).getString();
+    if (validationClazz == null || validationClazz.equals("")) {
+      return defaultValidation;
+    }
+    try {
+      Constructor constructors = Class.forName(validationClazz)
+          .getConstructor(SqlValidatorImpl.class);
+      return (T) constructors.newInstance(defaultValidation);
+    } catch (Exception e) {
+      return defaultValidation;
+    }
   }
 
   @Override public @Nullable String model() {

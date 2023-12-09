@@ -749,8 +749,9 @@ public class CalcitePrepareImpl implements CalcitePrepare {
         .withConformance(connectionConfig.conformance())
         .withDefaultNullCollation(connectionConfig.defaultNullCollation())
         .withIdentifierExpansion(true);
-    return new CalciteSqlValidator(opTab, catalogReader, typeFactory,
-        config);
+    SqlValidator validator =
+        new CalciteSqlValidator(opTab, catalogReader, typeFactory, config);
+    return context.config().getCustomerValidation(SqlValidator.class, validator);
   }
 
   private static List<ColumnMetaData> getColumnMetaDataList(
