@@ -66,6 +66,7 @@ import org.apache.calcite.sql.fun.SqlJsonObjectAggAggFunction;
 import org.apache.calcite.sql.fun.SqlQuantifyOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.fun.SqlTrimFunction;
+import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
@@ -3055,8 +3056,16 @@ public class RexImpTable {
       final TimeUnit unit = requireNonNull(timeUnitRange, "timeUnitRange").startUnit;
       Expression operand = argValueList.get(1);
       boolean isIntervalType = SqlTypeUtil.isInterval(call.operands.get(1).getType());
-      final SqlTypeName sqlTypeName =
+      SqlTypeName sqlTypeName =
           call.operands.get(1).getType().getSqlTypeName();
+      // for input of char/varchar type, cast to date before execution
+      if (sqlTypeName == SqlTypeName.VARCHAR || sqlTypeName == SqlTypeName.CHAR) {
+        final RelDataType targetType =
+            new BasicSqlType(translator.typeFactory.getTypeSystem(), SqlTypeName.DATE);
+        operand =
+            translator.translateCast(call.operands.get(1).getType(), targetType, operand, true);
+        sqlTypeName = SqlTypeName.DATE;
+      }
       switch (unit) {
       case MILLENNIUM:
       case CENTURY:

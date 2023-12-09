@@ -186,6 +186,7 @@ class CsvTest {
    */
   @Test void testSelect() throws SQLException {
     sql("model", "select * from EMPS").ok();
+    sql("model", "select week('2012-01-01') from EMPS").ok();
   }
 
   @Test void testSelectSingleProjectGz() throws SQLException {
