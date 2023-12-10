@@ -145,6 +145,8 @@ import static java.util.Objects.requireNonNull;
  */
 public class CalcitePrepareImpl implements CalcitePrepare {
 
+  public static final ThreadLocal<Boolean> KYLIN_ONLY_PREPARE = new ThreadLocal<>();
+
   @Deprecated // to be removed before 2.0
   public static final boolean ENABLE_ENUMERABLE =
       CalciteSystemProperty.ENABLE_ENUMERABLE.value();
@@ -494,6 +496,12 @@ public class CalcitePrepareImpl implements CalcitePrepare {
       long maxRowCount) {
     if (SIMPLE_SQLS.contains(query.sql)) {
       return simplePrepare(context, castNonNull(query.sql));
+    }
+
+    if (KYLIN_ONLY_PREPARE.get() != null && KYLIN_ONLY_PREPARE.get()) {
+      ParseResult parseResult = parse(context, query.sql);
+      Class<OnlyPrepareEarlyAbortException> clazz = OnlyPrepareEarlyAbortException.class;
+      throw new OnlyPrepareEarlyAbortException(context, parseResult);
     }
     final JavaTypeFactory typeFactory = context.getTypeFactory();
     CalciteCatalogReader catalogReader =
@@ -1143,7 +1151,46 @@ public class CalcitePrepareImpl implements CalcitePrepare {
           format, detailLevel);
     }
 
+    public boolean findOlapRel(RelNode rel) {
+      Class aClass;
+      try {
+        aClass = Thread.currentThread()
+            .getContextClassLoader()
+            .loadClass("org.apache.kylin.query.relnode.OlapRel");
+      } catch (ClassNotFoundException e) {
+        return false;
+      }
+      return findRel(rel, Collections.singletonList(aClass)) != null;
+    }
+
+    private static RelNode findRel(RelNode rel, List<Class> candidate) {
+      for (Class clazz : candidate) {
+        if (clazz.isInstance(rel)) {
+          return rel;
+        }
+      }
+
+      if (rel.getInputs().size() < 1) {
+        return null;
+      }
+
+      return findRel(rel.getInput(0), candidate);
+    }
+
+    private void checkHasOlapEnumerableConverter(RelRoot root) {
+      if (findOlapRel(root.rel)
+          && !root.rel.getClass().getName().contains("OlapToEnumerableConverter")) {
+        String dumpPlan =
+            RelOptUtil.dumpPlan("",
+                root.rel,
+                SqlExplainFormat.TEXT,
+                SqlExplainLevel.DIGEST_ATTRIBUTES);
+        throw new IllegalArgumentException("Error planer:" + dumpPlan);
+      }
+    }
+
     @Override protected PreparedResult implement(RelRoot root) {
+      checkHasOlapEnumerableConverter(root);
       Hook.PLAN_BEFORE_IMPLEMENTATION.run(root);
       RelDataType resultType = root.rel.getRowType();
       boolean isDml = root.kind.belongsTo(SqlKind.DML);

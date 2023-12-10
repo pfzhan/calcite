@@ -39,6 +39,8 @@ import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
 import org.apache.calcite.rel.metadata.RelMetadataProvider;
 import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.OLAPJoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.OLAPJoinPushThroughJoinRule2;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.sql2rel.RelFieldTrimmer;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
@@ -238,7 +240,9 @@ public class Programs {
     builder.addRuleCollection(
         ImmutableList.of(CoreRules.FILTER_SUB_QUERY_TO_CORRELATE,
             CoreRules.PROJECT_SUB_QUERY_TO_CORRELATE,
-            CoreRules.JOIN_SUB_QUERY_TO_CORRELATE));
+            CoreRules.JOIN_SUB_QUERY_TO_CORRELATE,
+            OLAPJoinPushThroughJoinRule.INSTANCE,
+            OLAPJoinPushThroughJoinRule2.INSTANCE));
     return of(builder.build(), true, metadataProvider);
   }
 
