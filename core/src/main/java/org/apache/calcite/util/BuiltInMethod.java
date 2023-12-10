@@ -471,8 +471,15 @@ public enum BuiltInMethod {
   FLOOR_MOD(Math.class, "floorMod", long.class, long.class),
   ADD_MONTHS(DateTimeUtils.class, "addMonths", long.class, int.class),
   ADD_MONTHS_INT(DateTimeUtils.class, "addMonths", int.class, int.class),
+  ADD_MONTHS_STRING(SqlFunctions.class, "addMonths", String.class, int.class),
+  ADD_MILLS_STRING(SqlFunctions.class, "addMills", String.class, long.class),
+  ADD_DAYS_STRING(SqlFunctions.class, "addDays", String.class, long.class),
   SUBTRACT_MONTHS(DateTimeUtils.class, "subtractMonths", long.class,
       long.class),
+  SUBTRACT_DAYS(SqlFunctions.class, "subtractDays", String.class,
+      String.class),
+  SUBTRACT_MIllS(SqlFunctions.class, "subtractMills", String.class,
+      String.class),
   FLOOR(SqlFunctions.class, "floor", int.class, int.class),
   CEIL(SqlFunctions.class, "ceil", int.class, int.class),
   ABS(SqlFunctions.class, "abs", long.class),
@@ -848,6 +855,7 @@ public enum BuiltInMethod {
       long.class),
   BIG_DECIMAL_ADD(BigDecimal.class, "add", BigDecimal.class),
   BIG_DECIMAL_NEGATE(BigDecimal.class, "negate"),
+  BIG_DECIMAL_SET_SCALE(BigDecimal.class, "setScale", int.class, int.class),
   COMPARE_TO(Comparable.class, "compareTo", Object.class);
 
   @SuppressWarnings("ImmutableEnumChecker")

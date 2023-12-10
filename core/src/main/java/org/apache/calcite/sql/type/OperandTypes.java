@@ -49,7 +49,6 @@ import java.util.function.Predicate;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import static org.apache.calcite.sql.type.ReturnTypes.NUMERIC_STRING;
 import static org.apache.calcite.util.Static.RESOURCE;
 
 import static java.util.Objects.requireNonNull;
@@ -862,6 +861,15 @@ public abstract class OperandTypes {
   public static final SqlOperandTypeChecker COMPARABLE_UNORDERED_COMPARABLE_UNORDERED =
       new ComparableOperandTypeChecker(2, RelDataTypeComparability.UNORDERED,
           SqlOperandTypeChecker.Consistency.LEAST_RESTRICTIVE);
+
+  /**
+   * see https://olapio.atlassian.net/browse/KE-42057.
+   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
+   * FYI: https://github.com/Kyligence/KAP/issues/13872.
+   */
+  public static final SqlOperandTypeChecker COMPARABLE_NO_CONVERT_TO_VARYING =
+      new ComparableOperandTypeChecker(2, RelDataTypeComparability.UNORDERED,
+          SqlOperandTypeChecker.Consistency.LEAST_RESTRICTIVE_NO_CONVERT_TO_VARYING);
 
   /**
    * Operand type-checking strategy where two operands must both be in the

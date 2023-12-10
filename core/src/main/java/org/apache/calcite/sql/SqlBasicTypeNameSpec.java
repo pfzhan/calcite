@@ -180,10 +180,12 @@ public class SqlBasicTypeNameSpec extends SqlTypeNameSpec {
       writer.keyword("WITH LOCAL TIME ZONE");
     }
 
-    if (writer.getDialect().supportsCharSet() && charSetName != null) {
-      writer.keyword("CHARACTER SET");
-      writer.identifier(charSetName, true);
-    }
+    // https://github.com/Kyligence/KAP/issues/12975
+    // Remove charsetName on sql unparse for CC
+    // if (writer.getDialect().supportsCharSet() && charSetName != null) {
+    //   writer.keyword("CHARACTER SET");
+    //   writer.identifier(charSetName, true);
+    // }
   }
 
   @Override public RelDataType deriveType(SqlValidator validator) {

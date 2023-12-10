@@ -25,7 +25,9 @@ import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
@@ -86,7 +88,9 @@ class SqlTimestampDiffFunction extends SqlFunction {
   /** Creates a SqlTimestampDiffFunction. */
   SqlTimestampDiffFunction(String name, SqlOperandTypeChecker operandTypeChecker) {
     super(name, SqlKind.TIMESTAMP_DIFF,
-        SqlTimestampDiffFunction::inferReturnType2, null, operandTypeChecker,
+        SqlTimestampDiffFunction::inferReturnType2, null,
+        OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.ANY,
+            SqlTypeFamily.ANY),
         SqlFunctionCategory.TIMEDATE);
   }
 

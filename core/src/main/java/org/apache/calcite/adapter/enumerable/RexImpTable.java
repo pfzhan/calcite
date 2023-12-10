@@ -462,6 +462,10 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_MINUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UNARY_PLUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.UPPER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.USER;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_DAY;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_HOUR;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_MINUTE;
+import static org.apache.calcite.sql.type.SqlTypeName.INTERVAL_SECOND;
 import static org.apache.calcite.util.ReflectUtil.isStatic;
 
 import static java.util.Objects.requireNonNull;
@@ -2967,6 +2971,8 @@ public class RexImpTable {
       final Primitive primitive = Primitive.ofBoxOr(type0);
       if (primitive == null
           || type1 == BigDecimal.class
+          || backupMethodName.equals("plus")
+          && isNumberOrString(type0) && isNumberOrString(type1)
           || COMPARISON_OPERATORS.contains(op)
           && !COMP_OP_TYPES.contains(primitive)) {
         return Expressions.call(SqlFunctions.class, backupMethodName,
@@ -2986,6 +2992,15 @@ public class RexImpTable {
 
       return Expressions.makeBinary(expressionType,
           argValueList.get(0), argValueList.get(1));
+    }
+
+    // see https://olapio.atlassian.net/browse/KE-42243
+    private boolean isNumberOrString(Type type) {
+      if (type == String.class || type == BigDecimal.class) {
+        return true;
+      }
+      Primitive primitive = Primitive.ofBoxOr(type);
+      return primitive != null && Number.class.isAssignableFrom(primitive.boxClass);
     }
 
     /** Returns whether any of a call's operands have ANY type. */
@@ -3653,10 +3668,14 @@ public class RexImpTable {
         case TIME:
           return Expressions.convert_(trop0, long.class);
         default:
-          final BuiltInMethod method =
-              operand0.getType().getSqlTypeName() == SqlTypeName.TIMESTAMP
-                  ? BuiltInMethod.ADD_MONTHS
-                  : BuiltInMethod.ADD_MONTHS_INT;
+          final BuiltInMethod method;
+          if (operand0.getType().getSqlTypeName() == SqlTypeName.TIMESTAMP) {
+            method = BuiltInMethod.ADD_MONTHS;
+          } else if (operand0.getType().getSqlTypeName() == SqlTypeName.CHAR) {
+            method = BuiltInMethod.ADD_MONTHS_STRING;
+          } else {
+            method = BuiltInMethod.ADD_MONTHS_INT;
+          }
           return Expressions.call(method.method, trop0, trop1);
         }
 
@@ -3674,7 +3693,17 @@ public class RexImpTable {
         case MINUS:
           return normalize(typeName, Expressions.subtract(trop0, trop1));
         default:
-          return normalize(typeName, Expressions.add(trop0, trop1));
+          if (typeName1 == INTERVAL_DAY
+              && operand0.getType().getSqlTypeName() == SqlTypeName.CHAR) {
+            final BuiltInMethod dMethod = BuiltInMethod.ADD_DAYS_STRING;
+            return Expressions.call(dMethod.method, trop0, trop1);
+          } else if (typeName1 != INTERVAL_DAY
+              && operand0.getType().getSqlTypeName() == SqlTypeName.CHAR) {
+            final BuiltInMethod mMethod = BuiltInMethod.ADD_MILLS_STRING;
+            return Expressions.call(mMethod.method, trop0, trop1);
+          } else {
+            return normalize(typeName, Expressions.add(trop0, trop1));
+          }
         }
 
       default:
@@ -3689,6 +3718,23 @@ public class RexImpTable {
           default:
             break;
           }
+
+          if (typeName == INTERVAL_DAY
+              && (call.getOperands().get(1).getType().getSqlTypeName() == SqlTypeName.CHAR
+              || call.getOperands().get(0).getType().getSqlTypeName() == SqlTypeName.CHAR)) {
+            return Expressions.call(BuiltInMethod.SUBTRACT_DAYS.method,
+                trop0, trop1);
+          }
+
+          if ((typeName == INTERVAL_HOUR
+              || typeName == INTERVAL_MINUTE
+              || typeName == INTERVAL_SECOND)
+              && (call.getOperands().get(1).getType().getSqlTypeName() == SqlTypeName.CHAR
+                  || call.getOperands().get(0).getType().getSqlTypeName() == SqlTypeName.CHAR)) {
+            return Expressions.call(BuiltInMethod.SUBTRACT_MIllS.method,
+                trop0, trop1);
+          }
+
           TimeUnit fromUnit =
               typeName1 == SqlTypeName.DATE ? TimeUnit.DAY : TimeUnit.MILLISECOND;
           TimeUnit toUnit = TimeUnit.MILLISECOND;

@@ -93,7 +93,8 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
 
     // Simplify Outer Joins
     JoinRelType joinType = join.getJoinType();
-    if (config.isSmart()
+    boolean joinOnRawColumns = canPushIntoFromAbove(filter);
+    if (config.isSmart() && joinOnRawColumns
         && !origAboveFilters.isEmpty()
         && join.getJoinType() != JoinRelType.INNER) {
       joinType = RelOptUtil.simplifyJoin(join, origAboveFilters, joinType);
@@ -112,7 +113,7 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
     // filters. They can be pushed down if they are not on the NULL
     // generating side.
     boolean filterPushed = false;
-    if (RelOptUtil.classifyFilters(
+    if (joinOnRawColumns && RelOptUtil.classifyFilters(
         join,
         aboveFilters,
         joinType.canPushIntoFromAbove(),
@@ -232,6 +233,11 @@ public abstract class FilterJoinRule<C extends FilterJoinRule.Config>
         RexUtil.fixUp(rexBuilder, aboveFilters,
             RelOptUtil.getFieldTypeList(relBuilder.peek().getRowType())));
     call.transformTo(relBuilder.build());
+  }
+
+  // ComputedColumn is not raw column
+  protected boolean canPushIntoFromAbove(Filter filter) {
+    return true;
   }
 
   /**

@@ -75,7 +75,7 @@ import static java.util.Objects.requireNonNull;
  * {@link org.apache.calcite.adapter.enumerable.EnumerableConvention enumerable calling convention}. */
 public class EnumerableWindow extends Window implements EnumerableRel {
   /** Creates an EnumerableWindowRel. */
-  EnumerableWindow(RelOptCluster cluster, RelTraitSet traits, RelNode child,
+  public EnumerableWindow(RelOptCluster cluster, RelTraitSet traits, RelNode child,
       List<RexLiteral> constants, RelDataType rowType, List<Group> groups) {
     super(cluster, traits, child, constants, rowType, groups);
   }

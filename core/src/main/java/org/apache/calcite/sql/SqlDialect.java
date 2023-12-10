@@ -1245,6 +1245,19 @@ public class SqlDialect {
     return caseSensitive;
   }
 
+  /** see https://olapio.atlassian.net/browse/KE-42719 */
+  public String getLiteralQuoteString() {
+    return literalQuoteString;
+  }
+
+  public String getLiteralEndQuoteString() {
+    return literalEndQuoteString;
+  }
+
+  public String getLiteralEscapedQuote() {
+    return literalEscapedQuote;
+  }
+
   /**
    * A few utility functions copied from org.apache.calcite.util.Util. We have
    * copied them because we wish to keep SqlDialect's dependencies to a

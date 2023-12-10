@@ -1218,6 +1218,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       }
       // fall through
     case LEAST_RESTRICTIVE:
+    case LEAST_RESTRICTIVE_NO_CONVERT_TO_VARYING:
+      // https://github.com/Kyligence/KAP/issues/13872
       if (isDateCompareWithCharacter(types)) {
         return findMaxPrecisionCharType(types);
       }
@@ -1231,14 +1233,14 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       @UnknownInitialization StandardConvertletTable this,
       SqlRexContext cx, SqlCall call) {
     final RexNode rex = convertCall(cx, call);
+    final RexBuilder rexBuilder = cx.getRexBuilder();
+    List<RexNode> operands = ((RexCall) rex).getOperands();
     switch (rex.getType().getSqlTypeName()) {
     case DATE:
     case TIME:
     case TIMESTAMP:
       // Use special "+" operator for datetime + interval.
       // Re-order operands, if necessary, so that interval is second.
-      final RexBuilder rexBuilder = cx.getRexBuilder();
-      List<RexNode> operands = ((RexCall) rex).getOperands();
       if (operands.size() == 2) {
         final SqlTypeName sqlTypeName = operands.get(0).getType().getSqlTypeName();
         switch (sqlTypeName) {
@@ -1263,6 +1265,9 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       }
       return rexBuilder.makeCall(rex.getType(),
           SqlStdOperatorTable.DATETIME_PLUS, operands);
+    case CHAR:
+    case VARCHAR:
+      return rexBuilder.makeCall(rex.getType(), SqlStdOperatorTable.CONCAT, operands);
     default:
       return rex;
     }

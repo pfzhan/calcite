@@ -794,7 +794,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
             node, SqlTypeUtil.convertTypeToSpec(desiredType));
   }
 
-  private boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,
+  protected boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,
       PairList<String, RelDataType> fields, boolean includeSystemVars,
       SelectScope scope, SqlIdentifier id, RelDataTypeField field) {
     switch (field.getType().getStructKind()) {

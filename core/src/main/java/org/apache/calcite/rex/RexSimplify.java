@@ -64,6 +64,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 import static org.apache.calcite.rex.RexUnknownAs.FALSE;
@@ -265,6 +266,7 @@ public class RexSimplify {
     if (STRONG.isNull(e)) {
       // Only boolean NULL (aka UNKNOWN) can be converted to FALSE. Even in
       // unknownAs=FALSE mode, we must not convert a NULL integer (say) to FALSE
+      // see https://olapio.atlassian.net/browse/KE-42709
       if (e.getType().getSqlTypeName() == SqlTypeName.BOOLEAN) {
         switch (unknownAs) {
         case FALSE:
@@ -1519,13 +1521,14 @@ public class RexSimplify {
       RelOptUtil.decomposeConjunction(o, terms, notTerms);
     }
 
+    List<RexNode> distinctTerms = terms.stream().distinct().collect(Collectors.toList());
     switch (unknownAs) {
     case FALSE:
-      return simplifyAnd2ForUnknownAsFalse(terms, notTerms, Comparable.class);
+      return simplifyAnd2ForUnknownAsFalse(distinctTerms, notTerms, Comparable.class);
     default:
       break;
     }
-    return simplifyAnd2(terms, notTerms);
+    return simplifyAnd2(distinctTerms, notTerms);
   }
 
   // package-protected only to support a deprecated method; treat as private
@@ -2002,8 +2005,9 @@ public class RexSimplify {
       case LITERAL:
         if (RexLiteral.isNullLiteral(term)) {
           if (unknownAs == FALSE) {
-            terms.remove(i);
-            --i;
+            // see https://olapio.atlassian.net/browse/KE-42709
+            // terms.remove(i);
+            // --i;
             continue;
           } else if (unknownAs == TRUE) {
             return trueLiteral;
@@ -2972,6 +2976,8 @@ public class RexSimplify {
 
     /** Returns whether it is worth to fix and convert to {@code SEARCH} calls. */
     boolean needToFix() {
+      // see https://olapio.atlassian.net/browse/KE-42028
+      return false;
       // Fix and converts to SEARCH if:
       // 1. A Sarg has complexity greater than 1;
       // 2. A Sarg was merged with another Sarg or range;
@@ -2981,11 +2987,11 @@ public class RexSimplify {
       // Ignore 'negate' just to be compatible with previous versions of this
       // method. "build().complexity()" would be a better estimate, if we could
       // switch to it breaking lots of plans.
-      final Collection<RexSargBuilder> builders = map.values();
-      return builders.stream()
-          .anyMatch(b -> b.build(false).complexity() > 1 || b.mergedSarg)
-          || newTermsCount == 1
-          && builders.stream().allMatch(b -> simpleSarg(b.build()));
+      // final Collection<RexSargBuilder> builders = map.values();
+      // return builders.stream()
+      //     .anyMatch(b -> b.build(false).complexity() > 1 || b.mergedSarg)
+      //     || newTermsCount == 1
+      //     && builders.stream().allMatch(b -> simpleSarg(b.build()));
     }
 
     /**

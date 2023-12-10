@@ -3160,6 +3160,12 @@ public abstract class RelOptUtil {
       // If bloat is negative never merge.
       return null;
     }
+    // // see https://olapio.atlassian.net/browse/AL-717
+    // boolean containsNonMergeableExprs = project.getProjects()
+    //     .stream().anyMatch(exp -> exp.toString().contains("EXPLODE"));
+    // if (containsNonMergeableExprs) {
+    //   return null;
+    // }
     if (RexOver.containsOver(nodes, null)
         && project.containsOver()) {
       // Is it valid relational algebra to apply windowed function to a windowed
