@@ -31,8 +31,8 @@ import org.apache.calcite.util.TimeString;
 import org.apache.calcite.util.TimestampString;
 import org.apache.calcite.util.Util;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.RangeSet;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.RangeSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 

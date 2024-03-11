@@ -109,11 +109,11 @@ import org.apache.calcite.util.Static;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.trace.CalciteTrace;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import org.apache.kylin.guava30.shaded.common.annotations.VisibleForTesting;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Sets;
 
 import org.apiguardian.api.API;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -492,7 +492,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
     if (expanded != null) {
       inferUnknownTypes(targetType, scope, expanded);
     }
-    final RelDataType type = deriveType(selectScope, expanded);
+    RelDataType type = deriveType(selectScope, expanded);
+    // Re-derive SELECT ITEM's data type that may be nullable in AggregatingSelectScope when it
+    // appears in advanced grouping elements such as CUBE, ROLLUP , GROUPING SETS.
+    // For example, SELECT CASE WHEN c = 1 THEN '1' ELSE '23' END AS x FROM t GROUP BY CUBE(x),
+    // the 'x' should be nullable even if x's literal values are not null.
+    if (selectScope instanceof AggregatingSelectScope) {
+      type = requireNonNull(selectScope.nullifyType(stripAs(expanded), type));
+    }
     setValidatedNodeType(expanded, type);
     fields.add(Pair.of(alias, type));
     return false;
@@ -664,8 +671,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
                     ImmutableList.of(child.name, columnName),
                     startPosition);
             // Don't add expanded rolled up columns
-            // HACK POINT: exclude ComputedColumns
-            if (needAddOrExpandField(exp, scope, field)) {
+            if (!isRolledUpColumn(exp, scope)) {
               addOrExpandField(
                       selectItems,
                       aliases,
@@ -748,11 +754,6 @@ public class SqlValidatorImpl implements SqlValidatorWithHints {
         ? node
         : SqlStdOperatorTable.CAST.createCall(SqlParserPos.ZERO,
             node, SqlTypeUtil.convertTypeToSpec(desiredType));
-  }
-
-  protected boolean needAddOrExpandField(SqlIdentifier exp,
-      SelectScope scope, RelDataTypeField field) {
-    return !isRolledUpColumn(exp, scope);
   }
 
   protected boolean addOrExpandField(List<SqlNode> selectItems, Set<String> aliases,

@@ -23,9 +23,9 @@ import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.dialect.AnsiSqlDialect;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import org.apache.kylin.guava30.shaded.common.cache.CacheBuilder;
+import org.apache.kylin.guava30.shaded.common.cache.CacheLoader;
+import org.apache.kylin.guava30.shaded.common.cache.LoadingCache;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -239,7 +239,17 @@ public class NlsString implements Comparable<NlsString>, Cloneable {
       boolean suffix,
       SqlDialect dialect) {
     StringBuilder ret = new StringBuilder();
-    dialect.quoteStringLiteral(ret, prefix ? charsetName : null, getValue());
+    // see https://olapio.atlassian.net/browse/KE-42719
+//    dialect.quoteStringLiteral(ret, prefix ? charsetName : null, getValue());
+    if (prefix && (null != charsetName)) {
+      ret.append("_");
+      ret.append(charsetName);
+    }
+    ret.append(dialect.getLiteralQuoteString());
+    ret.append(
+        getValue().replace(dialect.getLiteralEndQuoteString(),
+        dialect.getLiteralEscapedQuote()));
+    ret.append(dialect.getLiteralEndQuoteString());
 
     // NOTE jvs 3-Feb-2005:  see FRG-78 for why this should go away
     if (false) {

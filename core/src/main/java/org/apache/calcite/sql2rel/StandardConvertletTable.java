@@ -26,7 +26,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCallBinding;
-import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexRangeRef;
@@ -72,7 +71,6 @@ import org.apache.calcite.sql.fun.SqlSubstringFunction;
 import org.apache.calcite.sql.fun.SqlTrimFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker.Consistency;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
@@ -81,8 +79,8 @@ import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -121,6 +119,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
         SqlStdOperatorTable.IS_NOT_NULL);
     addAlias(SqlLibraryOperators.NULL_SAFE_EQUAL, SqlStdOperatorTable.IS_NOT_DISTINCT_FROM);
     addAlias(SqlStdOperatorTable.PERCENT_REMAINDER, SqlStdOperatorTable.MOD);
+    addAlias(SqlLibraryOperators.IFNULL, SqlLibraryOperators.NVL);
 
     // Register convertlets for specific objects.
     registerOp(SqlStdOperatorTable.CAST, this::convertCast);
@@ -261,7 +260,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
     registerOp(SqlStdOperatorTable.CEIL, floorCeilConvertlet);
 
     registerOp(SqlStdOperatorTable.TIMESTAMP_ADD, new TimestampAddConvertlet());
-    registerOp(SqlStdOperatorTable.TIMESTAMP_DIFF, new TimestampDiffConvertlet());
+    registerOp(SqlStdOperatorTable.TIMESTAMP_DIFF,
+        new TimestampDiffConvertlet());
 
     registerOp(SqlStdOperatorTable.INTERVAL,
         StandardConvertletTable::convertInterval);
@@ -959,8 +959,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   public static Boolean isDateCompareWithCharacter(List<RelDataType> types) {
     if (types.size() >= 2
-            && (
-                (types.get(0).getFamily().equals(SqlTypeFamily.DATE)
+        && (
+            (types.get(0).getFamily().equals(SqlTypeFamily.DATE)
             && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
             || (types.get(1).getFamily().equals(SqlTypeFamily.DATE)
             && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
@@ -971,8 +971,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
 
   public static Boolean isTimestampCompareWithCharacter(List<RelDataType> types) {
     if (types.size() >= 2
-            && (
-                (types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
+        && (
+            (types.get(0).getFamily().equals(SqlTypeFamily.TIMESTAMP)
             && types.get(1).getFamily().equals(SqlTypeFamily.CHARACTER))
             || (types.get(1).getFamily().equals(SqlTypeFamily.TIMESTAMP)
             && types.get(0).getFamily().equals(SqlTypeFamily.CHARACTER)))) {
@@ -989,7 +989,7 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           largestCharType = dataType;
         } else {
           largestCharType = largestCharType.getPrecision()
-                  > dataType.getPrecision() ? largestCharType : dataType;
+              > dataType.getPrecision() ? largestCharType : dataType;
         }
       }
     }
@@ -1017,14 +1017,8 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
           exprs.add(cx.getRexBuilder().ensureType(type, expr, true)));
     }
     if (exprs.size() > 1) {
-      RelDataType type =
-              consistentType(cx, consistency, RexUtil.types(exprs));
-
-      /* OVERRIDE POINT */
-      if (type == null) {
-        type = consistentType2(cx, consistency, exprs);
-      }
-
+      final RelDataType type =
+          consistentType(cx, consistency, RexUtil.types(exprs));
       if (type != null) {
         final List<RexNode> oldExprs = new ArrayList<>(exprs);
         exprs.clear();
@@ -1034,37 +1028,6 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       }
     }
     return exprs;
-  }
-
-  /* OVERRIDE POINT */
-  // https://github.com/Kyligence/KAP/issues/4037
-  // For LEAST_RESTRICTIVE consistency, which is the '=' operator, convert constants implicitly
-  private static RelDataType consistentType2(SqlRexContext cx,
-      Consistency consistency, List<RexNode> exprs) {
-    if (Consistency.LEAST_RESTRICTIVE != consistency) {
-      return null;
-    }
-    if (exprs.size() <= 1) {
-      return null;
-    }
-    if (isTimestampCompareWithCharacter(RexUtil.types(exprs))) {
-      return null;
-    }
-
-    // check all expressions are constants but one
-    RexNode oneNonConst = null;
-    for (RexNode expr : exprs) {
-      if (expr instanceof RexLiteral || expr instanceof RexDynamicParam) {
-        continue;
-      }
-      // got a non-constant
-      if (oneNonConst != null) {
-        return null; // give up, since there is more than one non-constant
-      }
-      oneNonConst = expr;
-    }
-
-    return oneNonConst == null ? null : oneNonConst.getType();
   }
 
   private static @Nullable RelDataType consistentType(SqlRexContext cx,
@@ -1114,6 +1077,12 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
         return findMaxPrecisionCharType(types);
       }
       return cx.getTypeFactory().leastRestrictive(types);
+    //https://github.com/Kyligence/KAP/issues/13872
+    case LEAST_RESTRICTIVE_NO_CONVERT_TO_VARYING:
+      if (isDateCompareWithCharacter(types)) {
+        return findMaxPrecisionCharType(types);
+      }
+      return cx.getTypeFactory().leastRestrictive(types, false);
     default:
       return null;
     }
@@ -1123,14 +1092,14 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       @UnknownInitialization StandardConvertletTable this,
       SqlRexContext cx, SqlCall call) {
     final RexNode rex = convertCall(cx, call);
+    final RexBuilder rexBuilder = cx.getRexBuilder();
+    List<RexNode> operands = ((RexCall) rex).getOperands();
     switch (rex.getType().getSqlTypeName()) {
     case DATE:
     case TIME:
     case TIMESTAMP:
       // Use special "+" operator for datetime + interval.
       // Re-order operands, if necessary, so that interval is second.
-      final RexBuilder rexBuilder = cx.getRexBuilder();
-      List<RexNode> operands = ((RexCall) rex).getOperands();
       if (operands.size() == 2) {
         final SqlTypeName sqlTypeName = operands.get(0).getType().getSqlTypeName();
         switch (sqlTypeName) {
@@ -1155,6 +1124,9 @@ public class StandardConvertletTable extends ReflectiveConvertletTable {
       }
       return rexBuilder.makeCall(rex.getType(),
           SqlStdOperatorTable.DATETIME_PLUS, operands);
+    case CHAR:
+    case VARCHAR:
+      return rexBuilder.makeCall(rex.getType(), SqlStdOperatorTable.CONCAT, operands);
     default:
       return rex;
     }

@@ -106,7 +106,7 @@ public class SqlTimestampAddFunction extends SqlFunction {
   SqlTimestampAddFunction() {
     super("TIMESTAMPADD", SqlKind.TIMESTAMP_ADD, RETURN_TYPE_INFERENCE, null,
         OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER,
-            SqlTypeFamily.DATETIME),
+            SqlTypeFamily.ANY),
         SqlFunctionCategory.TIMEDATE);
   }
 }

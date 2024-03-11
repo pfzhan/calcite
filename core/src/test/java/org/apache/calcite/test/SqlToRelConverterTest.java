@@ -48,7 +48,7 @@ import org.apache.calcite.util.Bug;
 import org.apache.calcite.util.TestUtil;
 import org.apache.calcite.util.Util;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -4430,6 +4430,78 @@ class SqlToRelConverterTest extends SqlToRelTestBase {
             t.withValidatorConfig(config ->
                 config.withIdentifierExpansion(false)))
         .withTrim(false)
+        .ok();
+  }
+
+  /** Test case for
+   * <a href="https://issues.apache.org/jira/browse/CALCITE-5089">[CALCITE-5089]
+   * Allow GROUP BY ALL or DISTINCT set quantifier on GROUPING SETS</a>. */
+  @Test void testGroupByDistinct() {
+    final String sql = "SELECT deptno, job, count(*)\n"
+        + "FROM emp\n"
+        + "GROUP BY DISTINCT\n"
+        + "CUBE (deptno, job),\n"
+        + "ROLLUP (deptno, job)";
+    sql(sql).ok();
+  }
+
+  /** Test case for
+   * <a href="https://issues.apache.org/jira/browse/CALCITE-5089">[CALCITE-5089]
+   * Allow GROUP BY ALL or DISTINCT set quantifier on GROUPING SETS</a>. */
+  @Test void testGroupByAll() {
+    final String sql = "SELECT deptno, job, count(*)\n"
+        + "FROM emp\n"
+        + "GROUP BY ALL\n"
+        + "CUBE (deptno, job),\n"
+        + "ROLLUP (deptno, job)";
+    sql(sql).ok();
+  }
+
+  /**
+   * Test case for
+   * <a href="https://issues.apache.org/jira/browse/CALCITE-5045">[CALCITE-5045]
+   * Alias within GroupingSets throws type mis-match exception</a>.
+   */
+  @Test void testAliasWithinGroupingSets() {
+    final String sql = "SELECT empno / 2 AS x\n"
+        + "FROM emp\n"
+        + "GROUP BY ROLLUP(x)";
+    sql(sql)
+        .withConformance(SqlConformanceEnum.LENIENT)
+        .ok();
+  }
+
+  /**
+   * Test case for
+   * <a href="https://issues.apache.org/jira/browse/CALCITE-5145">[CALCITE-5145]
+   * CASE statement within GROUPING SETS throws type mis-match exception</a>.
+   */
+  @Test public void testCaseAliasWithinGroupingSets() {
+    sql("SELECT empno,\n"
+        + "CASE\n"
+        + "WHEN ename in ('Fred','Eric') THEN 'CEO'\n"
+        + "ELSE 'Other'\n"
+        + "END AS derived_col\n"
+        + "FROM emp\n"
+        + "GROUP BY GROUPING SETS ((empno, derived_col),(empno))")
+        .withConformance(SqlConformanceEnum.LENIENT).ok();
+  }
+
+  /**
+   * Test case for
+   * <a href="https://issues.apache.org/jira/browse/CALCITE-5145">[CALCITE-5145]
+   * CASE statement within GROUPING SETS throws type mis-match exception</a>.
+   */
+  @Test void testCaseWithinGroupingSets() {
+    String sql = "SELECT empno,\n"
+        + "CASE WHEN ename IN ('Fred','Eric') THEN 'Manager' ELSE 'Other' END\n"
+        + "FROM emp\n"
+        + "GROUP BY GROUPING SETS (\n"
+        + "(empno, CASE WHEN ename IN ('Fred','Eric') THEN 'Manager' ELSE 'Other' END),\n"
+        + "(empno)\n"
+        + ")";
+    sql(sql)
+        .withConformance(SqlConformanceEnum.LENIENT)
         .ok();
   }
 }

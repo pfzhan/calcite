@@ -101,12 +101,12 @@ import org.apache.calcite.util.mapping.Mapping;
 import org.apache.calcite.util.mapping.MappingType;
 import org.apache.calcite.util.mapping.Mappings;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.LinkedHashMultimap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.Multimap;
 
 import org.checkerframework.checker.initialization.qual.NotOnlyInitialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -149,18 +149,18 @@ public abstract class RelOptUtil {
 
   @SuppressWarnings("Guava")
   @Deprecated // to be removed before 2.0
-  public static final com.google.common.base.Predicate<Filter>
+  public static final org.apache.kylin.guava30.shaded.common.base.Predicate<Filter>
       FILTER_PREDICATE = f -> !f.containsOver();
 
   @SuppressWarnings("Guava")
   @Deprecated // to be removed before 2.0
-  public static final com.google.common.base.Predicate<Project>
+  public static final org.apache.kylin.guava30.shaded.common.base.Predicate<Project>
       PROJECT_PREDICATE =
       RelOptUtil::notContainsWindowedAgg;
 
   @SuppressWarnings("Guava")
   @Deprecated // to be removed before 2.0
-  public static final com.google.common.base.Predicate<Calc> CALC_PREDICATE =
+  public static final org.apache.kylin.guava30.shaded.common.base.Predicate<Calc> CALC_PREDICATE =
       RelOptUtil::notContainsWindowedAgg;
 
   //~ Methods ----------------------------------------------------------------
@@ -3183,6 +3183,12 @@ public abstract class RelOptUtil {
       List<? extends RexNode> nodes, Project project, int bloat) {
     if (bloat < 0) {
       // If bloat is negative never merge.
+      return null;
+    }
+    // see https://olapio.atlassian.net/browse/AL-717
+    boolean containsNonMergeableExprs = project.getProjects()
+        .stream().anyMatch(exp -> exp.toString().contains("EXPLODE"));
+    if (containsNonMergeableExprs) {
       return null;
     }
     if (RexOver.containsOver(nodes, null)

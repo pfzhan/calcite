@@ -25,6 +25,7 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.runtime.Geometries;
@@ -51,12 +52,12 @@ import org.apache.calcite.util.TimeString;
 import org.apache.calcite.util.TimestampString;
 import org.apache.calcite.util.Util;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableRangeSet;
-import com.google.common.collect.Range;
-import com.google.common.collect.RangeSet;
-import com.google.common.collect.TreeRangeSet;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableRangeSet;
+import org.apache.kylin.guava30.shaded.common.collect.Range;
+import org.apache.kylin.guava30.shaded.common.collect.RangeSet;
+import org.apache.kylin.guava30.shaded.common.collect.TreeRangeSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
@@ -642,6 +643,11 @@ public class RexBuilder {
 
   boolean canRemoveCastFromLiteral(RelDataType toType, @Nullable Comparable value,
       SqlTypeName fromTypeName) {
+    if (value == null) {
+      return true;
+    } else if (isKylinUdfObjectType(toType)) {
+      return false;
+    }
     final SqlTypeName sqlType = toType.getSqlTypeName();
     if (!RexLiteral.valueMatchesType(value, sqlType, false)) {
       return false;
@@ -679,6 +685,15 @@ public class RexBuilder {
     }
 
     return true;
+  }
+
+  private static boolean isKylinUdfObjectType(RelDataType toType) {
+    if (toType instanceof RelDataTypeFactoryImpl.JavaType) {
+      // kylin udf to support null, very dirty to remove
+      RelDataTypeFactoryImpl.JavaType javaType = (RelDataTypeFactoryImpl.JavaType) toType;
+      return javaType.getJavaClass() == Object.class;
+    }
+    return false;
   }
 
   private RexNode makeCastExactToBoolean(RelDataType toType, RexNode exp) {
@@ -783,6 +798,9 @@ public class RexBuilder {
   public RexNode makeAbstractCast(
       RelDataType type,
       RexNode exp) {
+    if (isKylinUdfObjectType(type)) {
+      type = exp.getType();
+    }
     return new RexCall(
         type,
         SqlStdOperatorTable.CAST,
@@ -981,6 +999,17 @@ public class RexBuilder {
         p = 0;
       }
       o = ((TimestampString) o).round(p);
+      break;
+    // see https://olapio.atlassian.net/browse/KE-42046
+    // Calcite 1.30 removed the precision setting for the Decimal data type,
+    // restored the logic here to ensure correctness
+    case DECIMAL:
+      if (o != null) {
+        assert o instanceof BigDecimal;
+        if (type.getScale() >= 0 && ((BigDecimal) o).scale() > type.getScale()) {
+          o = ((BigDecimal) o).setScale(type.getScale(), RoundingMode.HALF_UP);
+        }
+      }
       break;
     default:
       break;

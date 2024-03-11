@@ -26,7 +26,7 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Util;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -285,7 +285,7 @@ public class SqlIdentifier extends SqlNode {
       SqlWriter writer,
       int leftPrec,
       int rightPrec) {
-    SqlUtil.unparseSqlIdentifierSyntax(writer, this, false);
+    SqlUtil.unparseSqlIdentifierSyntax(writer, this, null, false);
   }
 
   @Override public void validate(SqlValidator validator, SqlValidatorScope scope) {

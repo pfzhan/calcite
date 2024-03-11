@@ -39,9 +39,9 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Suppliers;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -282,6 +282,8 @@ public class SqlDialect {
       return DatabaseProduct.INTERBASE;
     case "LUCIDDB":
       return DatabaseProduct.LUCIDDB;
+    case "KYLIN":
+      return DatabaseProduct.KYLIN;
     case "ORACLE":
       return DatabaseProduct.ORACLE;
     case "PHOENIX":
@@ -1223,6 +1225,19 @@ public class SqlDialect {
     return caseSensitive;
   }
 
+  /** see https://olapio.atlassian.net/browse/KE-42719 */
+  public String getLiteralQuoteString() {
+    return literalQuoteString;
+  }
+
+  public String getLiteralEndQuoteString() {
+    return literalEndQuoteString;
+  }
+
+  public String getLiteralEscapedQuote() {
+    return literalEscapedQuote;
+  }
+
   /**
    * A few utility functions copied from org.apache.calcite.util.Util. We have
    * copied them because we wish to keep SqlDialect's dependencies to a
@@ -1310,6 +1325,7 @@ public class SqlDialect {
     INFORMIX("Informix", null, NullCollation.HIGH),
     INGRES("Ingres", null, NullCollation.HIGH),
     JETHRO("JethroData", "\"", NullCollation.LOW),
+    KYLIN("Apache KYLIN", "\"", NullCollation.HIGH),
     LUCIDDB("LucidDB", "\"", NullCollation.HIGH),
     INTERBASE("Interbase", null, NullCollation.HIGH),
     PHOENIX("Phoenix", "\"", NullCollation.HIGH),

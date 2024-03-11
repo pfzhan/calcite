@@ -37,8 +37,8 @@ import org.apache.calcite.util.ImmutableNullableList;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Util;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -1084,4 +1084,11 @@ public abstract class SqlOperator {
   public boolean argumentMustBeScalar(int ordinal) {
     return true;
   }
+
+  /**
+   * see https://olapio.atlassian.net/browse/KE-42051
+   * When SqlBasicCall modifies operandList with deep copy, it also should be replaced with
+   * the latest operandList to ensure reference consistency.
+   */
+  public void updateOperandsIfNeed(List<@Nullable SqlNode> operandList) {}
 }

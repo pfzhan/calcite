@@ -24,7 +24,7 @@ import org.apache.calcite.linq4j.function.Function2;
 import org.apache.calcite.linq4j.function.Predicate1;
 import org.apache.calcite.linq4j.function.Predicate2;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -569,7 +569,15 @@ public abstract class Expressions {
           value = new BigInteger(stringValue);
         }
         if (primitive != null) {
-          value = primitive.parse(stringValue);
+          if (value instanceof Number) {
+            Number valueNumber = (Number) value;
+            value = primitive.numberValue(valueNumber);
+            if (value == null) {
+              value = primitive.parse(stringValue);
+            }
+          } else {
+            value = primitive.parse(stringValue);
+          }
         }
       }
     }

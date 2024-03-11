@@ -29,7 +29,6 @@ import org.apache.calcite.rel.core.Calc;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.logical.LogicalCalc;
 import org.apache.calcite.rel.logical.LogicalFilter;
@@ -73,8 +72,8 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.immutables.value.Value;
@@ -180,8 +179,7 @@ public abstract class ReduceExpressionsRule<C extends ReduceExpressionsRule.Conf
             filter.getInput());
       } else if (newConditionExp instanceof RexLiteral
           || RexUtil.isNullLiteral(newConditionExp, true)) {
-        Values values = (Values) createEmptyRelOrEquivalent(call, filter);
-        call.transformTo(values.copy(call.rel(0).getTraitSet(), values.getInputs()));
+        call.transformTo(createEmptyRelOrEquivalent(call, filter));
       } else if (reduced) {
         call.transformTo(call.builder()
             .push(filter.getInput())

@@ -40,7 +40,7 @@ import org.apache.calcite.sql.type.SqlTypeTransforms;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Optionality;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -137,6 +137,14 @@ public abstract class SqlLibraryOperators {
   @LibraryOperator(libraries = {ORACLE})
   public static final SqlFunction NVL =
       new SqlFunction("NVL", SqlKind.NVL,
+          ReturnTypes.LEAST_RESTRICTIVE
+              .andThen(SqlTypeTransforms.TO_NULLABLE_ALL),
+          null, OperandTypes.SAME_SAME, SqlFunctionCategory.SYSTEM);
+
+  /** The "NVL(value, value)" function. */
+  @LibraryOperator(libraries = {BIG_QUERY, HIVE, SPARK})
+  public static final SqlFunction IFNULL =
+      new SqlFunction("IFNULL", SqlKind.NVL,
           ReturnTypes.LEAST_RESTRICTIVE
               .andThen(SqlTypeTransforms.TO_NULLABLE_ALL),
           null, OperandTypes.SAME_SAME, SqlFunctionCategory.SYSTEM);
@@ -650,7 +658,20 @@ public abstract class SqlLibraryOperators {
           ReturnTypes.BIGINT_NULLABLE, null, OperandTypes.TIMESTAMP,
           SqlFunctionCategory.TIMEDATE);
 
-  @LibraryOperator(libraries = {ORACLE})
+  /** The "CHAR(n)" function; returns the character whose ASCII code is
+   * {@code n} % 256, or null if {@code n} &lt; 0. */
+  @LibraryOperator(libraries = {MYSQL, SPARK})
+  public static final SqlFunction CHAR =
+      new SqlFunction("CHAR",
+          SqlKind.OTHER_FUNCTION,
+          ReturnTypes.CHAR_FORCE_NULLABLE,
+          null,
+          OperandTypes.INTEGER,
+          SqlFunctionCategory.STRING);
+
+  /** The "CHR(n)" function; returns the character whose UTF-8 code is
+   * {@code n}. */
+  @LibraryOperator(libraries = {ORACLE, POSTGRESQL})
   public static final SqlFunction CHR =
       new SqlFunction("CHR",
           SqlKind.OTHER_FUNCTION,

@@ -17,13 +17,11 @@
 package org.apache.calcite.sql.fun;
 
 import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlDescriptorOperator;
 import org.apache.calcite.sql.SqlFilterOperator;
 import org.apache.calcite.sql.SqlFunction;
@@ -41,7 +39,6 @@ import org.apache.calcite.sql.SqlNullTreatmentOperator;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlOverOperator;
 import org.apache.calcite.sql.SqlPostfixOperator;
 import org.apache.calcite.sql.SqlPrefixOperator;
@@ -65,18 +62,15 @@ import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlOperandCountRanges;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.util.ReflectiveSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlModality;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql2rel.AuxiliaryConverter;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Optionality;
 import org.apache.calcite.util.Pair;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -330,7 +324,20 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
 
   /**
    * Logical equals operator, '<code>=</code>'.
+   * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
+   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
+   * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
+  /*public static final SqlBinaryOperator EQUALS =
+      new SqlBinaryOperator(
+          "=",
+          SqlKind.EQUALS,
+          30,
+          true,
+          ReturnTypes.BOOLEAN_NULLABLE,
+          InferTypes.FIRST_KNOWN,
+          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);*/
   public static final SqlBinaryOperator EQUALS =
       new SqlBinaryOperator(
           "=",
@@ -339,7 +346,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           true,
           ReturnTypes.BOOLEAN_NULLABLE,
           InferTypes.FIRST_KNOWN,
-          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+          OperandTypes.COMPARABLE_NO_CONVERT_TO_VARYING);
 
   /**
    * Logical greater-than operator, '<code>&gt;</code>'.
@@ -530,7 +537,20 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
 
   /**
    * Logical not-equals operator, '<code>&lt;&gt;</code>'.
+   * OVERRIDE POINT
+   * see https://olapio.atlassian.net/browse/KE-42057
+   * Calcite 1.30 Keeps the same changes with AL-5295 as the previous Calcite version
+   * FYI: https://github.com/Kyligence/KAP/issues/13872
    */
+  /*public static final SqlBinaryOperator NOT_EQUALS =
+      new SqlBinaryOperator(
+          "<>",
+          SqlKind.NOT_EQUALS,
+          30,
+          true,
+          ReturnTypes.BOOLEAN_NULLABLE,
+          InferTypes.FIRST_KNOWN,
+          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);*/
   public static final SqlBinaryOperator NOT_EQUALS =
       new SqlBinaryOperator(
           "<>",
@@ -539,7 +559,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           true,
           ReturnTypes.BOOLEAN_NULLABLE,
           InferTypes.FIRST_KNOWN,
-          OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED);
+          OperandTypes.COMPARABLE_NO_CONVERT_TO_VARYING);
 
   /**
    * Logical <code>OR</code> operator.
@@ -565,46 +585,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable {
           true,
           ReturnTypes.NULLABLE_SUM,
           InferTypes.FIRST_KNOWN,
-          OperandTypes.PLUS_OPERATOR) {
-        @Override public void validateCall(SqlCall call,
-                                           SqlValidator validator,
-                                           SqlValidatorScope scope,
-                                           SqlValidatorScope operandScope) {
-          super.validateCall(call, validator, scope, operandScope);
-          if (call.getOperator() == SqlStdOperatorTable.PLUS) {
-            RelDataType type1 = validator.deriveType(scope, call.getOperandList().get(0));
-            RelDataType type2 = validator.deriveType(scope, call.getOperandList().get(1));
-            if (SqlTypeUtil.isNumeric(type1) && SqlTypeUtil.inStringFamily(type2)) {
-              return;
-            }
-            if (SqlTypeUtil.isNumeric(type2) && SqlTypeUtil.inStringFamily(type1)) {
-              return;
-            }
-          }
-          for (SqlNode operand : call.getOperandList()) {
-            if (operand instanceof SqlCharStringLiteral
-                && SqlTypeName.STRING_TYPES.contains(((SqlCharStringLiteral) operand).getTypeName())
-                && call instanceof SqlBasicCall) {
-              ((SqlBasicCall) call).setOperator(CONCAT);
-              break;
-            }
-          }
-        }
-
-        @Override public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-          RelDataType relDataType = ReturnTypes.NULLABLE_SUM.inferReturnType(opBinding);
-          if (relDataType != null) {
-            return relDataType;
-          }
-          int opBindCnt = opBinding.getOperandCount();
-          for (int i = 0; i < opBindCnt; i++) {
-            if (SqlTypeUtil.inCharOrBinaryFamilies(opBinding.getOperandType(i))) {
-              return ReturnTypes.DYADIC_STRING_SUM_PRECISION_NULLABLE.inferReturnType(opBinding);
-            }
-          }
-          return null;
-        }
-      };
+          OperandTypes.PLUS_OPERATOR);
 
   /**
    * Infix datetime plus operator, '<code>DATETIME + INTERVAL</code>'.

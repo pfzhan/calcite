@@ -357,7 +357,9 @@ public enum SqlConformanceEnum implements SqlConformance {
     case SQL_SERVER_2008:
       return true;
     default:
-      return false;
+//      see https://olapio.atlassian.net/browse/KE-42050
+//      return false;
+      return true;
     }
   }
 

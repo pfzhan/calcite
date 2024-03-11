@@ -57,9 +57,27 @@ plugins {
     id("com.autonomousapps.dependency-analysis") apply false
 }
 
-repositories {
-    // At least for RAT
-    mavenCentral()
+// define repo url
+val snapshotsRepoUrl = uri("https://repo-ofs.kyligence.com/repository/maven-snapshots/")
+val releasesRepoUrl = uri("https://repo-ofs.kyligence.com/repository/maven-releases/")
+val asfTestNexusUsername: String by properties
+val asfTestNexusPassword: String by properties
+
+allprojects {
+    repositories {
+        // At least for RAT
+        mavenLocal()
+        // achieve dependencies
+        maven {
+            name = "snapshots"
+            url = snapshotsRepoUrl
+        }
+        maven {
+            name = "releases"
+            url = releasesRepoUrl
+        }
+        mavenCentral()
+    }
 }
 
 fun reportsForHumans() = !(System.getenv()["CI"]?.toBoolean() ?: false)
@@ -421,6 +439,17 @@ allprojects {
         isReproducibleFileOrder = true
         dirMode = "775".toInt(8)
         fileMode = "664".toInt(8)
+    }
+
+    // Deploy to Nexus without Signing
+    plugins.withType<SigningPlugin> {
+        afterEvaluate {
+            configure<SigningExtension> {
+                // Note it would still try to sign the artifacts,
+                // however it would fail only when signing a RELEASE version fails
+                isRequired = false
+            }
+        }
     }
 
     tasks {
@@ -886,6 +915,16 @@ allprojects {
                             developerConnection.set("scm:git:https://gitbox.apache.org/repos/asf/calcite.git")
                             url.set("https://github.com/apache/calcite")
                             tag.set("HEAD")
+                        }
+                        repositories {
+                            val finalUrl = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+                            maven {
+                                url = finalUrl
+                                credentials {
+                                    username = asfTestNexusUsername
+                                    password = asfTestNexusPassword
+                                }
+                            }
                         }
                     }
                 }

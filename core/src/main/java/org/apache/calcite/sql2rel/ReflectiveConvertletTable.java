@@ -22,7 +22,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
 
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -210,6 +210,8 @@ public class ReflectiveConvertletTable implements SqlRexConvertletTable {
               "call to wrong operator");
           final SqlCall newCall =
               target.createCall(SqlParserPos.ZERO, call.getOperandList());
+          cx.getValidator().setValidatedNodeType(newCall,
+              cx.getValidator().getValidatedNodeType(call));
           return cx.convertExpression(newCall);
         });
   }

@@ -113,7 +113,7 @@ import org.apache.calcite.sql.SqlJsonQueryEmptyOrErrorBehavior;
 import org.apache.calcite.sql.SqlJsonQueryWrapperBehavior;
 import org.apache.calcite.sql.SqlJsonValueEmptyOrErrorBehavior;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -339,6 +339,8 @@ public enum BuiltInMethod {
   UPPER(SqlFunctions.class, "upper", String.class),
   LOWER(SqlFunctions.class, "lower", String.class),
   ASCII(SqlFunctions.class, "ascii", String.class),
+  CHAR_FROM_ASCII(SqlFunctions.class, "charFromAscii", int.class),
+  CHAR_FROM_UTF8(SqlFunctions.class, "charFromUtf8", int.class),
   REPEAT(SqlFunctions.class, "repeat", String.class, int.class),
   SPACE(SqlFunctions.class, "space", int.class),
   SOUNDEX(SqlFunctions.class, "soundex", String.class),
@@ -403,8 +405,15 @@ public enum BuiltInMethod {
   FLOOR_MOD(DateTimeUtils.class, "floorMod", long.class, long.class),
   ADD_MONTHS(SqlFunctions.class, "addMonths", long.class, int.class),
   ADD_MONTHS_INT(SqlFunctions.class, "addMonths", int.class, int.class),
+  ADD_MONTHS_STRING(SqlFunctions.class, "addMonths", String.class, int.class),
+  ADD_MILLS_STRING(SqlFunctions.class, "addMills", String.class, long.class),
+  ADD_DAYS_STRING(SqlFunctions.class, "addDays", String.class, long.class),
   SUBTRACT_MONTHS(SqlFunctions.class, "subtractMonths", long.class,
       long.class),
+  SUBTRACT_DAYS(SqlFunctions.class, "subtractDays", String.class,
+      String.class),
+  SUBTRACT_MIllS(SqlFunctions.class, "subtractMills", String.class,
+      String.class),
   FLOOR(SqlFunctions.class, "floor", int.class, int.class),
   CEIL(SqlFunctions.class, "ceil", int.class, int.class),
   COSH(SqlFunctions.class, "cosh", long.class),
@@ -639,6 +648,8 @@ public enum BuiltInMethod {
       long.class),
   BIG_DECIMAL_ADD(BigDecimal.class, "add", BigDecimal.class),
   BIG_DECIMAL_NEGATE(BigDecimal.class, "negate"),
+  // see https://olapio.atlassian.net/browse/KE-42058
+  BIG_DECIMAL_SET_SCALE(BigDecimal.class, "setScale", int.class, int.class),
   COMPARE_TO(Comparable.class, "compareTo", Object.class);
 
   @SuppressWarnings("ImmutableEnumChecker")

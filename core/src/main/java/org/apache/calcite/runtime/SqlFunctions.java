@@ -42,9 +42,8 @@ import org.apache.calcite.util.Util;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.language.Soundex;
-
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
+import org.apache.kylin.guava30.shaded.common.base.Splitter;
+import org.apache.kylin.guava30.shaded.common.base.Strings;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
@@ -513,9 +512,22 @@ public class SqlFunctions {
     return s.substring(len - n);
   }
 
-  /** SQL CHR(long) function. */
-  public static String chr(long n) {
-    return String.valueOf(Character.toChars((int) n));
+  /** SQL CHAR(integer) function, as in MySQL and Spark.
+   *
+   * <p>Returns the ASCII character of {@code n} modulo 256,
+   * or null if {@code n} &lt; 0. */
+  public static @Nullable String charFromAscii(int n) {
+    if (n < 0) {
+      return null;
+    }
+    return String.valueOf(Character.toChars(n % 256));
+  }
+
+  /** SQL CHR(integer) function, as in Oracle and Postgres.
+   *
+   * <p>Returns the UTF-8 character whose code is {@code n}. */
+  public static String charFromUtf8(int n) {
+    return String.valueOf(Character.toChars(n));
   }
 
   /** SQL OCTET_LENGTH(binary) function. */
@@ -993,9 +1005,34 @@ public class SqlFunctions {
     return (b0 == null || b1 == null) ? castNonNull(null) : b0.add(b1);
   }
 
-  /** SQL <code>+</code> operator applied to String values. Same as string concat operator. */
-  public static String plus(String s0, String s1) {
-    return s0 + s1;
+  // see https://olapio.atlassian.net/browse/KE-42084
+  // see https://olapio.atlassian.net/browse/KE-42243
+  public static BigDecimal plus(String s0, String s1) {
+    try {
+      return plus(toBigDecimal(s0), toBigDecimal(s1));
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
+  }
+
+  public static BigDecimal plus(String s0, BigDecimal b1) {
+    try {
+      return plus(toBigDecimal(s0), b1);
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
+  }
+
+  public static BigDecimal plus(String s0, Number b1) {
+    return plus(s0, toBigDecimal(b1));
+  }
+
+  public static BigDecimal plus(Number b1, String s0) {
+    return plus(s0, toBigDecimal(b1));
+  }
+
+  public static BigDecimal plus(Number b1, Number b2) {
+    return plus(toBigDecimal(b1), toBigDecimal(b2));
   }
 
   /** SQL <code>+</code> operator applied to Object values (at least one operand
@@ -2181,7 +2218,8 @@ public class SqlFunctions {
   public static BigDecimal toBigDecimal(Number number) {
     // There are some values of "long" that cannot be represented as "double".
     // Not so "int". If it isn't a long, go straight to double.
-    return number instanceof BigDecimal ? (BigDecimal) number
+    return number == null ? null
+        : number instanceof BigDecimal ? (BigDecimal) number
         : number instanceof BigInteger ? new BigDecimal((BigInteger) number)
         : number instanceof Long ? new BigDecimal(number.longValue())
         : new BigDecimal(number.doubleValue());
@@ -3007,6 +3045,19 @@ public class SqlFunctions {
     return x * DateTimeUtils.MILLIS_PER_DAY + millis;
   }
 
+  // see https://olapio.atlassian.net/browse/AL-8759
+  public static String addMonths(String tsString, int m) {
+    if (tsString.length() == 10) {
+      int newDate = addMonths(DateTimeUtils.dateStringToUnixDate(tsString), m);
+      return DateTimeUtils.unixDateToString(newDate);
+    } else if (tsString.length() == 19) {
+      long newTimestamp = addMonths(DateTimeUtils.timestampStringToUnixDate(tsString), m);
+      return DateTimeUtils.unixTimestampToString(newTimestamp);
+    } else {
+      throw new IllegalArgumentException("Wrong date/timestamp format for calcite addMonths func");
+    }
+  }
+
   /** Adds a given number of months to a date, represented as the number of
    * days since the epoch. */
   public static int addMonths(int date, int m) {
@@ -3046,6 +3097,108 @@ public class SqlFunctions {
     }
   }
 
+  public static String addDays(String tsString, long v) {
+    if (tsString.length() == 10) {
+      int newDate = DateTimeUtils.dateStringToUnixDate(tsString)
+          + (int) (v / DateTimeUtils.MILLIS_PER_DAY);
+      return DateTimeUtils.unixDateToString(newDate);
+    } else if (tsString.length() == 19) {
+      long newTimestamp = DateTimeUtils.timestampStringToUnixDate(tsString) + v;
+      return DateTimeUtils.unixTimestampToString(newTimestamp);
+    } else {
+      throw new IllegalArgumentException("Wrong date/timestamp format for calcite addDays func");
+    }
+  }
+
+  public static long addMills(String tsString, long v) {
+    if (tsString.length() == 10) {
+      return DateTimeUtils.dateStringToUnixDate(tsString) * DateTimeUtils.MILLIS_PER_DAY + v;
+    } else if (tsString.length() == 19) {
+      return DateTimeUtils.timestampStringToUnixDate(tsString) + v;
+    } else {
+      throw new IllegalArgumentException("Wrong date/timestamp format for calcite addMills func");
+    }
+  }
+
+  public static long subtractDays(String date0, String date1) {
+    if (date0.length() == 10 && date1.length() == 10) {
+      int newDate0 = DateTimeUtils.dateStringToUnixDate(date0);
+      int newDate1 = DateTimeUtils.dateStringToUnixDate(date1);
+      return (newDate0 - newDate1) * DateTimeUtils.MILLIS_PER_DAY;
+    } else if (date0.length() == 19 && date1.length() == 19) {
+      long newTimestamp0 = DateTimeUtils.timestampStringToUnixDate(date0);
+      long newTimestamp1 = DateTimeUtils.timestampStringToUnixDate(date1);
+      return newTimestamp0 - newTimestamp1;
+    } else if (date0.length() == 10 && date1.length() == 19) {
+      long newTimestamp0 = DateTimeUtils.dateStringToUnixDate(date0) * DateTimeUtils.MILLIS_PER_DAY;
+      long newTimestamp1 = DateTimeUtils.timestampStringToUnixDate(date1);
+      return newTimestamp0 - newTimestamp1;
+    } else if (date0.length() == 19 && date1.length() == 10) {
+      long newTimestamp0 = DateTimeUtils.timestampStringToUnixDate(date0);
+      long newTimestamp1 = DateTimeUtils.dateStringToUnixDate(date1) * DateTimeUtils.MILLIS_PER_DAY;
+      return newTimestamp0 - newTimestamp1;
+    } else {
+      throw new IllegalArgumentException(
+          "Wrong date/timestamp format for calcite subtractMonths(String, String) func");
+    }
+  }
+
+  public static long subtractDays(int date0, String date1) {
+    return subtractDays(DateTimeUtils.unixDateToString(date0), date1);
+  }
+
+  public static long subtractDays(String date0, int date1) {
+    return subtractDays(date0, DateTimeUtils.unixDateToString(date1));
+  }
+
+  public static long subtractDays(long date0, String date1) {
+    return subtractDays(DateTimeUtils.unixTimestampToString(date0), date1);
+  }
+
+  public static long subtractDays(String date0, long date1) {
+    return subtractDays(date0, DateTimeUtils.unixTimestampToString(date1));
+  }
+
+
+  public static long subtractMills(String date0, String date1) {
+    if (date0.length() == 10 && date1.length() == 10) {
+      int newDate0 = DateTimeUtils.dateStringToUnixDate(date0);
+      int newDate1 = DateTimeUtils.dateStringToUnixDate(date1);
+      return (newDate0 - newDate1) * DateTimeUtils.MILLIS_PER_DAY;
+    } else if (date0.length() == 19 && date1.length() == 19) {
+      long newTimestamp0 = DateTimeUtils.timestampStringToUnixDate(date0);
+      long newTimestamp1 = DateTimeUtils.timestampStringToUnixDate(date1);
+      return newTimestamp0 - newTimestamp1;
+    } else if (date0.length() == 10 && date1.length() == 19) {
+      long newTimestamp0 = DateTimeUtils.dateStringToUnixDate(date0) * DateTimeUtils.MILLIS_PER_DAY;
+      long newTimestamp1 = DateTimeUtils.timestampStringToUnixDate(date1);
+      return newTimestamp0 - newTimestamp1;
+    } else if (date0.length() == 19 && date1.length() == 10) {
+      long newTimestamp0 = DateTimeUtils.timestampStringToUnixDate(date0);
+      long newTimestamp1 = DateTimeUtils.dateStringToUnixDate(date1) * DateTimeUtils.MILLIS_PER_DAY;
+      return newTimestamp0 - newTimestamp1;
+    } else {
+      throw new IllegalArgumentException(
+          "Wrong date/timestamp format for calcite subtractMonths(String, String) func");
+    }
+  }
+
+  public static long subtractMills(int date0, String date1) {
+    return subtractMills(DateTimeUtils.unixDateToString(date0), date1);
+  }
+
+  public static long subtractMills(String date0, int date1) {
+    return subtractMills(date0, DateTimeUtils.unixDateToString(date1));
+  }
+
+  public static long subtractMills(long date0, String date1) {
+    return subtractMills(DateTimeUtils.unixTimestampToString(date0), date1);
+  }
+
+  public static long subtractMills(String date0, long date1) {
+    return subtractMills(date0, DateTimeUtils.unixTimestampToString(date1));
+  }
+
   /** Finds the number of months between two dates, each represented as the
    * number of days since the epoch. */
   public static int subtractMonths(int date0, int date1) {
@@ -3083,6 +3236,46 @@ public class SqlFunctions {
       --x;
     }
     return x;
+  }
+
+  public static int subtractMonths(String date0, String date1) {
+    if (date0.length() == 10 && date1.length() == 10) {
+      int newDate0 = DateTimeUtils.dateStringToUnixDate(date0);
+      int newDate1 = DateTimeUtils.dateStringToUnixDate(date1);
+      return subtractMonths(newDate0, newDate1);
+    } else if (date0.length() == 19 && date1.length() == 19) {
+      long newTimestamp0 = DateTimeUtils.timestampStringToUnixDate(date0);
+      long newTimestamp1 = DateTimeUtils.timestampStringToUnixDate(date1);
+      return subtractMonths(newTimestamp0, newTimestamp1);
+    } else if (date0.length() == 10 && date1.length() == 19) {
+      long newTimestamp0 = DateTimeUtils.dateStringToUnixDate(date0) * DateTimeUtils.MILLIS_PER_DAY;
+      long newTimestamp1 = DateTimeUtils.timestampStringToUnixDate(date1);
+      return subtractMonths(newTimestamp0, newTimestamp1);
+    } else if (date0.length() == 19 && date1.length() == 10) {
+      long newTimestamp0 = DateTimeUtils.timestampStringToUnixDate(date0);
+      long newTimestamp1 = DateTimeUtils.dateStringToUnixDate(date1) * DateTimeUtils.MILLIS_PER_DAY;
+      return subtractMonths(newTimestamp0, newTimestamp1);
+    } else {
+      throw new IllegalArgumentException(
+          "Wrong date/timestamp format for calcite subtractMonths(String, String) func");
+    }
+
+  }
+
+  public static int subtractMonths(int date0, String date1) {
+    return subtractMonths(DateTimeUtils.unixDateToString(date0), date1);
+  }
+
+  public static int subtractMonths(String date0, int date1) {
+    return subtractMonths(date0, DateTimeUtils.unixDateToString(date1));
+  }
+
+  public static int subtractMonths(long date0, String date1) {
+    return subtractMonths(DateTimeUtils.unixTimestampToString(date0), date1);
+  }
+
+  public static int subtractMonths(String date0, long date1) {
+    return subtractMonths(date0, DateTimeUtils.unixTimestampToString(date1));
   }
 
   /**

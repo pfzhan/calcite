@@ -125,7 +125,7 @@ import org.apache.calcite.tools.RuleSet;
 import org.apache.calcite.tools.RuleSets;
 import org.apache.calcite.util.ImmutableBitSet;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 import org.junit.jupiter.api.Disabled;
@@ -4797,6 +4797,47 @@ class RelOptRulesTest extends RelOptTestBase {
         + "  from sales.emp)";
     sql(sql).withRule(CoreRules.PROJECT_AGGREGATE_MERGE)
         .check();
+  }
+
+  /** Tests that ProjectAggregateMergeRule does nothing with non-numeric literals
+   * and does not throw an exception. */
+  @Test void testProjectAggregateMergeNonNumericLiteral() {
+    // Requires a NULLABLE column to trigger
+    final SqlTestFactory.CatalogReaderFactory catalogReaderFactory = (typeFactory, caseSensitive) ->
+        new MockCatalogReader(typeFactory, caseSensitive) {
+          @Override public MockCatalogReader init() {
+            MockSchema schema = new MockSchema("SALES");
+            registerSchema(schema);
+            final boolean nullable = true;
+            final RelDataType timestampType = typeFactory.createTypeWithNullability(
+                typeFactory.createSqlType(SqlTypeName.TIMESTAMP),
+                nullable);
+            String tableName = "NULLABLE";
+            MockTable table = MockTable
+                .create(this, schema, tableName, false, 100);
+            table.addColumn("HIREDATE", timestampType);
+            registerTable(table);
+            return this;
+          }
+        }.init();
+    final String sql = "select hiredate, coalesce(hiredate, {ts '1969-12-31 00:00:00'}) as c1\n"
+        + "from sales.nullable\n"
+        + "group by hiredate";
+    sql(sql)
+        .withCatalogReaderFactory(catalogReaderFactory)
+        .withRule(CoreRules.PROJECT_AGGREGATE_MERGE)
+        .checkUnchanged();
+  }
+
+  @Test void testProjectAggregateMergeNoOpForNonSum() {
+    final String sql = "select coalesce(m, 0)\n"
+        + "from (\n"
+        + "  select max(deptno) as m\n"
+        + "  from sales.emp\n"
+        + ")";
+    sql(sql)
+        .withRule(CoreRules.PROJECT_AGGREGATE_MERGE)
+        .checkUnchanged();
   }
 
   /**

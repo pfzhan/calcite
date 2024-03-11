@@ -46,11 +46,11 @@ import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 
-import com.google.common.base.Predicates;
-import com.google.common.base.Utf8;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import org.apache.kylin.guava30.shaded.common.base.Predicates;
+import org.apache.kylin.guava30.shaded.common.base.Utf8;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.Iterators;
+import org.apache.kylin.guava30.shaded.common.collect.Lists;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
@@ -310,7 +310,7 @@ public abstract class SqlUtil {
       if (id == null) {
         writer.keyword(operator.getName());
       } else {
-        unparseSqlIdentifierSyntax(writer, id, true);
+        unparseSqlIdentifierSyntax(writer, id, operator, true);
       }
     } else {
       writer.print(operator.getName());
@@ -371,12 +371,16 @@ public abstract class SqlUtil {
   public static void unparseSqlIdentifierSyntax(
       SqlWriter writer,
       SqlIdentifier identifier,
+      SqlOperator sqlIdentifierOp,
       boolean asFunctionID) {
     final boolean isUnquotedSimple = identifier.isSimple()
         && !identifier.getParserPosition().isQuoted();
-    final SqlOperator operator = isUnquotedSimple
-        ? SqlValidatorUtil.lookupSqlFunctionByID(SqlStdOperatorTable.instance(), identifier, null)
-        : null;
+    SqlOperator operator = sqlIdentifierOp;
+    if (operator == null) {
+      operator = isUnquotedSimple
+          ? SqlValidatorUtil.lookupSqlFunctionByID(SqlStdOperatorTable.instance(), identifier, null)
+          : null;
+    }
     boolean unparsedAsFunc = false;
     final SqlWriter.Frame frame =
         writer.startList(SqlWriter.FrameTypeEnum.IDENTIFIER);

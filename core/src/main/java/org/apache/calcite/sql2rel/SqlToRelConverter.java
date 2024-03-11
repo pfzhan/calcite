@@ -173,11 +173,11 @@ import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.trace.CalciteTrace;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import org.apache.kylin.guava30.shaded.common.base.Preconditions;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableSet;
+import org.apache.kylin.guava30.shaded.common.collect.Iterables;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.immutables.value.Value;
@@ -210,17 +210,6 @@ import static org.apache.calcite.sql.SqlUtil.stripAs;
 
 import static java.util.Objects.requireNonNull;
 
-/*
- * The code has synced with calcite. Hope one day, we could remove the hardcode override point.
- * OVERRIDE POINT:
- * - DEFAULT_IN_SUB_QUERY_THRESHOLD, was `20`, now `Integer.MAX_VALUE`
- * - isTrimUnusedFields(), override to false
- * - AggConverter.translateAgg(...), skip column reading
- * for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
- * - convertQuery(), call hackSelectStar() at the end
- * - createJoin() check cast operation
- */
-
 /**
  * Converts a SQL parse tree (consisting of
  * {@link org.apache.calcite.sql.SqlNode} objects) into a relational algebra
@@ -247,8 +236,7 @@ public class SqlToRelConverter {
 
   /** Size of the smallest IN list that will be converted to a semijoin to a
    * static table. */
-  /* OVERRIDE POINT */
-  public static final int DEFAULT_IN_SUB_QUERY_THRESHOLD = Integer.MAX_VALUE;
+  public static final int DEFAULT_IN_SUB_QUERY_THRESHOLD = 20;
 
   @Deprecated // to be removed before 2.0
   public static final int DEFAULT_IN_SUBQUERY_THRESHOLD =
@@ -596,9 +584,6 @@ public class SqlToRelConverter {
       SqlNode query,
       final boolean needsValidation,
       final boolean top) {
-
-    SqlNode origQuery = query; /* OVERRIDE POINT */
-
     if (needsValidation) {
       query = validator().validate(query);
     }
@@ -1284,20 +1269,6 @@ public class SqlToRelConverter {
 
       if (query instanceof SqlNodeList) {
         SqlNodeList valueList = (SqlNodeList) query;
-
-        // keep in clause.
-        if (!valueList.accept(new SqlIdentifierFinder())
-            && Boolean.parseBoolean(System.getProperty("calcite.keep-in-clause", "false"))
-            && (leftKeys.size() <= 1
-            || !Boolean.parseBoolean(
-                System.getProperty("calcite.convert-multiple-columns-in-to-or",
-                    "false")))) {
-          RexNode subQueryExpr = constructIn(bb, leftKeys, valueList, call.getOperator().kind);
-          if (subQueryExpr != null) {
-            subQuery.expr = subQueryExpr;
-            return;
-          }
-        }
         // When the list size under the threshold or the list references columns, we convert to OR.
         if (valueList.size() < config.getInSubQueryThreshold()
             || valueList.accept(new SqlIdentifierFinder())) {
@@ -1307,6 +1278,17 @@ public class SqlToRelConverter {
                   leftKeys,
                   valueList,
                   (SqlInOperator) call.getOperator());
+          return;
+        } else {
+          // keep in expression
+          RexNode inExp = constructIn(
+              bb,
+              leftKeys,
+              valueList,
+              call.getOperator().getKind());
+          if (inExp != null) {
+            subQuery.expr = inExp;
+          }
           return;
         }
 
@@ -3769,9 +3751,7 @@ public class SqlToRelConverter {
    */
   @Deprecated // to be removed before 2.0
   public boolean isTrimUnusedFields() {
-//    return config.isTrimUnusedFields();
-    /* OVERRIDE POINT */
-    return false;
+    return config.isTrimUnusedFields();
   }
 
   /**
@@ -5291,6 +5271,21 @@ public class SqlToRelConverter {
         case SCALAR_QUERY:
           call = (SqlCall) expr;
           query = Iterables.getOnlyElement(call.getOperandList());
+          if (query instanceof SqlSelect) {
+            // simplify scalar query to constant, such as: select 1 => 1.
+            SqlSelect sqlSelect = (SqlSelect) query;
+            SqlNodeList selectList = sqlSelect.getSelectList();
+            boolean isConstant = sqlSelect.getFrom() == null
+                && selectList.size() == 1 && selectList.get(0) instanceof SqlLiteral;
+            if (isConstant) {
+              RexNode rexNode = convertExpression(selectList.get(0));
+              // nullable in RexSubQuery.scalar(root.rel) is always true
+              // same logic as makeLiteral(Object value, RelDataType type, boolean allowCast)
+              RelDataType relDataType =
+                  typeFactory.createTypeWithNullability(rexNode.getType(), true);
+              return rexBuilder.makeAbstractCast(relDataType, rexNode);
+            }
+          }
           root = convertQueryRecursive(query, false, null);
           return RexSubQuery.scalar(root.rel);
 

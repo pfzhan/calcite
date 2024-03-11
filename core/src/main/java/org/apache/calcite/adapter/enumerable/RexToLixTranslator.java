@@ -28,6 +28,7 @@ import org.apache.calcite.linq4j.tree.CatchBlock;
 import org.apache.calcite.linq4j.tree.ConstantExpression;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.linq4j.tree.MethodCallExpression;
 import org.apache.calcite.linq4j.tree.ParameterExpression;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.linq4j.tree.Statement;
@@ -64,9 +65,9 @@ import org.apache.calcite.util.ControlFlowException;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.base.CaseFormat;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableList;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -75,6 +76,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -605,6 +607,12 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
         break;
       }
       break;
+    // see https://olapio.atlassian.net/browse/KE-42058
+    case DECIMAL:
+      if (targetType.getScale() != sourceType.getScale()) {
+        convert = adjustDecimalScale(targetType.getScale(), convert);
+      }
+      break;
     default:
       break;
     }
@@ -762,10 +770,15 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
         return Expressions.constant(bd, javaClass);
       }
       assert javaClass == BigDecimal.class;
-      return Expressions.new_(BigDecimal.class,
+      // see https://olapio.atlassian.net/browse/KE-42058
+      Expression expression = Expressions.new_(BigDecimal.class,
           Expressions.constant(
               requireNonNull(bd,
                   () -> "value for " + literal).toString()));
+      if (type.getScale() != bd.scale()) {
+        expression = adjustDecimalScale(type.getScale(), expression);
+      }
+      return expression;
     case DATE:
     case TIME:
     case TIME_WITH_LOCAL_TIME_ZONE:
@@ -822,6 +835,12 @@ public class RexToLixTranslator implements RexVisitor<RexToLixTranslator.Result>
       }
     }
     return Expressions.constant(value2, javaClass);
+  }
+
+  private static MethodCallExpression adjustDecimalScale(int scale,
+      Expression expression) {
+    return Expressions.call(expression, BuiltInMethod.BIG_DECIMAL_SET_SCALE.method,
+        Expressions.constant(scale), Expressions.constant(RoundingMode.HALF_UP));
   }
 
   public List<Expression> translateList(

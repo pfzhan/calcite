@@ -19,7 +19,7 @@ package org.apache.calcite.sql.type;
 import org.apache.calcite.avatica.util.ArrayImpl;
 import org.apache.calcite.runtime.Geometries;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.guava30.shaded.common.collect.ImmutableMap;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -48,6 +48,8 @@ public class JavaToSqlTypeConversionRules {
           .put(Integer.class, SqlTypeName.INTEGER)
           .put(int.class, SqlTypeName.INTEGER)
           .put(Long.class, SqlTypeName.BIGINT)
+          // see https://olapio.atlassian.net/browse/KE-42045
+          .put(Long[].class, SqlTypeName.ARRAY)
           .put(long.class, SqlTypeName.BIGINT)
           .put(Short.class, SqlTypeName.SMALLINT)
           .put(short.class, SqlTypeName.SMALLINT)
