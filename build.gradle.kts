@@ -60,6 +60,8 @@ plugins {
 // define repo url
 val snapshotsRepoUrl = uri("https://repo-ofs.kyligence.com/repository/maven-snapshots/")
 val releasesRepoUrl = uri("https://repo-ofs.kyligence.com/repository/maven-releases/")
+val asfTestNexusUsername: String by properties
+val asfTestNexusPassword: String by properties
 
 allprojects {
     repositories {
@@ -437,6 +439,17 @@ allprojects {
         isReproducibleFileOrder = true
         dirMode = "775".toInt(8)
         fileMode = "664".toInt(8)
+    }
+
+    // Deploy to Nexus without Signing
+    plugins.withType<SigningPlugin> {
+        afterEvaluate {
+            configure<SigningExtension> {
+                // Note it would still try to sign the artifacts,
+                // however it would fail only when signing a RELEASE version fails
+                isRequired = false
+            }
+        }
     }
 
     tasks {
@@ -908,8 +921,8 @@ allprojects {
                             maven {
                                 url = finalUrl
                                 credentials {
-                                    username = "guoliang.sun"
-                                    password = "Sgl19960301"
+                                    username = asfTestNexusUsername
+                                    password = asfTestNexusPassword
                                 }
                             }
                         }
