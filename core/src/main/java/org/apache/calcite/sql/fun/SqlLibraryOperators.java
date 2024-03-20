@@ -120,8 +120,11 @@ public abstract class SqlLibraryOperators {
               }),
           SqlFunctionCategory.SYSTEM) {
         @Override public boolean validRexOperands(int count, Litmus litmus) {
+          // Calcite 1.30 changed the if operator to case when,
+          // which causes Kylin computable columns to be unusable
+          return true;
           // IF is translated to RexNode by expanding to CASE.
-          return litmus.fail("not a rex operator");
+          // return litmus.fail("not a rex operator");
         }
       };
 
