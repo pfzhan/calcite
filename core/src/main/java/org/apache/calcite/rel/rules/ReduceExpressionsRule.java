@@ -62,6 +62,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlFloorFunction;
+import org.apache.calcite.sql.fun.SqlLibraryOperators;
 import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.sql.type.NotConstant;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -1109,6 +1110,9 @@ public abstract class ReduceExpressionsRule<C extends ReduceExpressionsRule.Conf
             callConstancy = Constancy.NON_CONSTANT;
           }
         }
+      } else if (call.op == SqlLibraryOperators.IFNULL
+          || call.op == SqlLibraryOperators.IF) {
+        callConstancy = Constancy.NON_CONSTANT;
       }
 
       // look for NON_CONSTANT operands
