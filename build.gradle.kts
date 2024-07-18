@@ -58,8 +58,8 @@ plugins {
 }
 
 // define repo url
-val snapshotsRepoUrl = uri("https://repo-ofs.kyligence.com/repository/maven-snapshots/")
-val releasesRepoUrl = uri("https://repo-ofs.kyligence.com/repository/maven-releases/")
+val snapshotsRepoUrl = uri("https://repository.kyligence.io/repository/maven-snapshots/")
+val releasesRepoUrl = uri("https://repository.kyligence.io/repository/maven-releases/")
 val asfTestNexusUsername: String by properties
 val asfTestNexusPassword: String by properties
 
